@@ -36,6 +36,9 @@ def command_help(client: DockerClient,
                  bot: Bot,
                  update: Updater,
                  args: List[str]) -> None:
+    """Usage `/help COMMAND`
+    Displays help message about COMMAND if available.
+    """
     if not assert_arg_count(1, args, bot, update):
         return
     command_name = args[0]
@@ -56,7 +59,9 @@ def command_info(client: DockerClient,
                  bot: Bot,
                  update: Updater,
                  args: List[str]) -> None:
-    """Provides global informations about the current docker daemon."""
+    """Usage: `/info`
+    Provides global informations about the current docker daemon.
+    """
     info = client.info()
     message = f'''**Docker status** 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
@@ -72,7 +77,9 @@ def command_start(client: DockerClient,
                   bot: Bot,
                   update: Updater,
                   args: List[str]) -> None:
-    """Reinitialize the bot's internal state for that user."""
+    """Usage: `/start`
+    (Re)initializes the bot's internal state for that user.
+    """
     reply(f'Hello {update.message.from_user.first_name} 👋 I am your personal '
           f'docker assistant. Please select a command.',
           bot,
