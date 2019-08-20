@@ -6,4 +6,5 @@
 # shellcheck disable=SC1091
 . ./venv/bin/activate
 . ./secret.env
+export LOGGING_LEVEL=INFO
 python3 src/main.py -a "$TELEGRAM_ADMIN" -t "$TELEGRAM_TOKEN"

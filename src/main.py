@@ -1,91 +1,28 @@
 from docker import DockerClient
 from functools import partial
-import json
 import logging
 import optparse
-import telegram
-from telegram import Bot
+import os
+from telegram import Bot, Update
 import telegram.error
-import telegram.ext
-from telegram.ext import Updater
-from typing import Callable, Dict, List, Optional
+from telegram.ext import CommandHandler, Updater
+from telegram.ext.filters import Filters
+from typing import Callable, Dict, List, Optional, Union
 
-Command = Callable[[DockerClient, Bot, Updater, List[str]], None]
-
-authorized_users = []  # type: List[int]
-commands = {}  # type: Dict[str, Command]
+import commands
 
 
-def command(name: Optional[str] = None):
-    def decorator(callback: Command):
-        def wrapper(client: DockerClient,
-                    bot: Bot,
-                    update: Updater,
-                    args: List[str]) -> None:
-            if update.message.from_user.id not in authorized_users:
-                bot.send_message(
-                    chat_id=update.message.chat_id,
-                    text="Hello {}. Unfortonately, you do *not* seem to be an "
-                         "authorized user. *I will therefore not accept any "
-                         "command you issue.*"
-                         .format(update.message.from_user.first_name),
-                         parse_mode=telegram.ParseMode.MARKDOWN)
-            elif len(args) > 0 and args[0] == "help":
-                if callback.__doc__ == '':
-                    bot.send_message(
-                        chat_id=update.message.chat_id,
-                        text="No help for command {}".format(name),
-                        parse_mode=telegram.ParseMode.MARKDOWN)
-                else:
-                    bot.send_message(
-                        chat_id=update.message.chat_id,
-                        text="*Help for command `{}`*\n{}".format(
-                            name, callback.__doc__),
-                        parse_mode=telegram.ParseMode.MARKDOWN)
-            else:
-                return callback(client, bot, update, args)
-        if name:
-            global commands
-            commands[name] = wrapper
-        return wrapper
-    return decorator
+TelegramError = Union[telegram.error.TelegramError,
+                      telegram.error.NetworkError]
 
 
-@command("start")
-def command_start(client: DockerClient,
-                  bot: Bot,
-                  update: Updater,
-                  args: List[str]) -> None:
-    """Reinitialize the bot's internal state for that user."""
-    bot.send_message(
-        chat_id=update.message.chat_id,
-        reply_markup=telegram.ReplyKeyboardMarkup(
-            [
-                [
-                    "/info"
-                ]
-            ]
-        ),
-        text="Hello {} 👋 I am you docker assistant. Please select a command."
-             .format(update.message.from_user.first_name))
+def error_callback(bot: Bot,
+                   update: Update,
+                   error: TelegramError) -> None:
+    """Custom telegram error callback.
 
-
-@command("info")
-def command_info(client: DockerClient,
-                 bot: Bot,
-                 update: Updater,
-                 args: List[str]) -> None:
-    """Provides global informations about the current docker daemon."""
-    info = client.info()
-    reply = f'''▪️ Docker version: {info["ServerVersion"]}
-▪️ Memory: {info["MemTotal"]}
-▪️ Running containers: {info["ContainersRunning"]}
-▪️ Paused containers: {info["ContainersPaused"]}
-▪️ Stopped containers: {info["ContainersStopped"]}'''
-    bot.send_message(chat_id=update.message.chat_id, text=reply)
-
-
-def error_callback(bot, update, error):
+    See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
+    """
     try:
         raise error
     except telegram.error.Unauthorized:
@@ -102,45 +39,77 @@ def error_callback(bot, update, error):
         logging.error("TelegramError")
 
 
-def main():
-    parser = optparse.OptionParser()
-    parser.add_option("-a", "--authorized-user", action="append",
-                      dest="authorized_users",
-                      help="Sets an authorized user; reuse this option to add "
-                           "more authorized users",
-                      metavar="USERID", type="int")
-    parser.add_option("-s", "--server", default="unix:///var/run/docker.sock",
-                      dest="server", help="URL to the docker server",
-                      metavar="URL")
-    parser.add_option("-t", "--token", dest="token",
-                      help="Telegram bot token", metavar="TOKEN")
-    (options, args) = parser.parse_args()
+def init_docker(server: str) -> DockerClient:
+    """Inits the docker client.
+    """
+    client = DockerClient(base_url=server)
+    logging.info("Connected to docker socket {}".format(server))
+    return client
 
-    if not options.authorized_users:
-        logging.warning("No authorized user set! Use the -a flag")
-    else:
-        global authorized_users
-        authorized_users = options.authorized_users
 
-    global docker_client
-    docker_client = DockerClient(base_url=options.server)
-    logging.info("Connected to docker socket {}".format(options.server))
+def init_telegram(token: str,
+                  authorized_users: List[int],
+                  docker_client: DockerClient) -> None:
+    """Inits the telegram bot.
 
-    updater = Updater(token=options.token)
+    Registers commands, polls.
+    """
+    updater = Updater(token=token)
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
-    for k in commands:
-        dispatcher.add_handler(
-            telegram.ext.CommandHandler(
-                k, partial(commands[k], docker_client), pass_args=True))
+    for k in commands.commands:
+        dispatcher.add_handler(CommandHandler(
+            k,
+            partial(commands.commands[k], docker_client),
+            filters=Filters.user(authorized_users),
+            pass_args=True))
     updater.start_polling()
     logging.info("Started bot {}".format(updater.bot.id))
 
 
+def main():
+    """Main function.
+    """
+    parser = optparse.OptionParser()
+    parser.add_option(
+        "-a", "--authorized-user",
+        action="append",
+        default=[],
+        dest="authorized_users",
+        help="Sets an authorized user; reuse this option to add more "
+             "authorized users",
+        metavar="USERID",
+        type="int")
+    parser.add_option(
+        "-s", "--server",
+        default="unix:///var/run/docker.sock",
+        dest="server",
+        help="URL to the docker server",
+        metavar="URL")
+    parser.add_option(
+        "-t", "--token",
+        dest="token",
+        help="Telegram bot token",
+        metavar="TOKEN")
+    (options, args) = parser.parse_args()
+
+    if len(options.authorized_users) == 0:
+        logging.warning("No authorized user set! Use the -a flag")
+
+    docker_client = init_docker(options.server)
+    init_telegram(options.token, options.authorized_users, docker_client)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
-        format='[%(levelname)s] %(asctime)s %(name)s: %(message)s',
-        level=logging.INFO)
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        level={
+            "CRITICAL": logging.CRITICAL,
+            "DEBUG": logging.DEBUG,
+            "ERROR": logging.ERROR,
+            "INFO": logging.INFO,
+            "WARNING": logging.WARNING
+        }[os.environ.get("LOGGING_LEVEL", "WARNING")])
     try:
         main()
     finally:
