@@ -1,4 +1,5 @@
 from docker import DockerClient
+from functools import partial
 import json
 import logging
 import optparse
@@ -9,14 +10,18 @@ import telegram.ext
 from telegram.ext import Updater
 from typing import Callable, Dict, List, Optional
 
+Command = Callable[[DockerClient, Bot, Updater, List[str]], None]
+
 authorized_users = []  # type: List[int]
-commands = {}  # type: Dict[str, Callable[[Bot, Updater, List[str]], None]]
-docker_client = DockerClient()  # type: DockerClient
+commands = {}  # type: Dict[str, Command]
 
 
 def command(name: Optional[str] = None):
-    def decorator(callback: Callable[[Bot, Updater, List[str]], None]):
-        def wrapper(bot: Bot, update: Updater, args: List[str]) -> None:
+    def decorator(callback: Command):
+        def wrapper(client: DockerClient,
+                    bot: Bot,
+                    update: Updater,
+                    args: List[str]) -> None:
             if update.message.from_user.id not in authorized_users:
                 bot.send_message(
                     chat_id=update.message.chat_id,
@@ -38,7 +43,7 @@ def command(name: Optional[str] = None):
                             name, callback.__doc__),
                         parse_mode=telegram.ParseMode.MARKDOWN)
             else:
-                return callback(bot, update, args)
+                return callback(client, bot, update, args)
         if name:
             global commands
             commands[name] = wrapper
@@ -47,7 +52,10 @@ def command(name: Optional[str] = None):
 
 
 @command("start")
-def command_start(bot: Bot, update: Updater, args: List[str]) -> None:
+def command_start(client: DockerClient,
+                  bot: Bot,
+                  update: Updater,
+                  args: List[str]) -> None:
     """Reinitialize the bot's internal state for that user."""
     bot.send_message(
         chat_id=update.message.chat_id,
@@ -63,23 +71,17 @@ def command_start(bot: Bot, update: Updater, args: List[str]) -> None:
 
 
 @command("info")
-def command_info(bot: Bot, update: Updater, args: List[str]) -> None:
-    """Provides global informations about the current docker instance."""
-    info = docker_client.info()
-    if len(args) > 0 and args[0] == "short":
-        reply = '''
-▪️ Docker version: {v}
-▪️ Memory: {mem}
-▪️ Running containers: {rc}
-▪️ Paused containers: {pc}
-▪️ Stopped containers: {sc}'''.format(
-            v=info["ServerVersion"],
-            mem=info["MemTotal"],
-            rc=info["ContainersRunning"],
-            pc=info["ContainersPaused"],
-            sc=info["ContainersStopped"])
-    else:
-        reply = json.dumps(info, indent=4, sort_keys=True)
+def command_info(client: DockerClient,
+                 bot: Bot,
+                 update: Updater,
+                 args: List[str]) -> None:
+    """Provides global informations about the current docker daemon."""
+    info = client.info()
+    reply = f'''▪️ Docker version: {info["ServerVersion"]}
+▪️ Memory: {info["MemTotal"]}
+▪️ Running containers: {info["ContainersRunning"]}
+▪️ Paused containers: {info["ContainersPaused"]}
+▪️ Stopped containers: {info["ContainersStopped"]}'''
     bot.send_message(chat_id=update.message.chat_id, text=reply)
 
 
@@ -129,7 +131,8 @@ def main():
     dispatcher.add_error_handler(error_callback)
     for k in commands:
         dispatcher.add_handler(
-            telegram.ext.CommandHandler(k, commands[k], pass_args=True))
+            telegram.ext.CommandHandler(
+                k, partial(commands[k], docker_client), pass_args=True))
     updater.start_polling()
     logging.info("Started bot {}".format(updater.bot.id))
 
