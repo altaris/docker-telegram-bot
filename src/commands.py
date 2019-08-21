@@ -24,9 +24,19 @@ command_keyboard = [
 def _command(name: Optional[str] = None, help_msg: str = ""):
     """Decorator for command callbacks.
 
-    A command callback has type commands.Command.
+    A command has type commands.Command. This decorator wraps it to catch and
+    report docker.errors.APIError exceptions.
     """
     def decorator(cmd: Command):
+        def wrapper(client: DockerClient,
+                    bot: Bot,
+                    update: Updater,
+                    args: List[str]) -> None:
+            try:
+                cmd(client, bot, update, args)
+            except docker.errors.APIError as e:
+                reply_error(f'Docker daemon raised an API error: {str(e)}',
+                            bot, update)
         if name:
             global commands
             global commands_help
@@ -79,8 +89,6 @@ def command_info(client: DockerClient,
         except docker.errors.NotFound:
             reply_error(f'Container \"{container_name}\" not found.', bot,
                         update)
-        except docker.errors.APIError as e:
-            reply_error(f'Docker daemon error: {str(e)}', bot, update)
 
 
 def command_info_container(client: DockerClient, container_name: str) -> str:
