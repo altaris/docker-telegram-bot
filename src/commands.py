@@ -26,7 +26,7 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
     A command has type commands.Command. This decorator wraps it to catch and
     report docker.errors.APIError exceptions.
     """
-    def decorator(cmd: Command):
+    def decorator(cmd: Command) -> Command:
         def wrapper(client: DockerClient,
                     bot: Bot,
                     update: Update,
