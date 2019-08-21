@@ -38,7 +38,7 @@ def _command(name: Optional[str] = None, help_msg: str = ""):
 
 @_command(
     "help",
-    """Usage `/help COMMAND`
+    """Usage `/help <COMMAND>`
 Displays help message about `COMMAND` if available.""")
 def command_help(client: DockerClient,
                  bot: Bot,
@@ -71,29 +71,46 @@ def command_info(client: DockerClient,
     if not expect_max_arg_count(1, args, bot, update):
         return
     if len(args) == 0:
-        info = client.info()
-        message = f'''*Docker status* 🐳⚙️
-▪️ Docker version: {info["ServerVersion"]}
-▪️ Memory: {info["MemTotal"]}
-▪️ Running containers: {info["ContainersRunning"]}
-▪️ Paused containers: {info["ContainersPaused"]}
-▪️ Stopped containers: {info["ContainersStopped"]}'''
-        reply(message, bot, update)
+        reply(command_info_docker(client), bot, update)
     else:
-        container_id = args[0]
-        logging.debug(container_id)
+        container_name = args[0]
         try:
-            c = client.containers.get(container_id)
-            message = f'''*Container `{c.short_id} {c.name}`:*
-️️️️️️️️▪️ Image: {c.image}
-️️️️️️️️▪️ Status: {c.status}
-️️️️️️️️▪️ Labels: {c.labels}'''
-            reply(message, bot, update)
+            reply(command_info_container(client, container_name), bot, update)
         except docker.errors.NotFound:
-            reply_error(f'Container \"{container_id}\" not found.', bot,
+            reply_error(f'Container \"{container_name}\" not found.', bot,
                         update)
         except docker.errors.APIError as e:
             reply_error(f'Docker daemon error: {str(e)}', bot, update)
+
+
+def command_info_container(client: DockerClient, container_name: str) -> str:
+    c = client.containers.get(container_name)
+    return f'''*Container `{c.short_id} {c.name}`:*
+️️️️️️️▪️ Image: {c.image}
+️️️️️️️▪️ Status: {c.status}
+️️️️️️️▪️ Labels: {c.labels}'''
+
+
+def command_info_docker(client: DockerClient) -> str:
+    info = client.info()
+    running_container_list = "\n".join([''] + [
+        f'     - `{c.name}`' for c in
+        client.containers.list(filters={"status": "running"})
+    ])
+    paused_container_list = "\n".join([''] + [
+        f'     - `{c.name}`' for c in
+        client.containers.list(filters={"status": "paused"})
+    ])
+    stopped_container_list = "\n".join([''] + [
+        f'     - `{c.name}`' for c in
+        client.containers.list(filters={"status": "exited"})
+    ])
+    return f'''*Docker status* 🐳⚙️
+▪️ Docker version: {info["ServerVersion"]}
+▪️ Memory: {info["MemTotal"]}
+▪️ Running containers: {info["ContainersRunning"]}{running_container_list}
+▪️ Paused containers: {info["ContainersPaused"]}{paused_container_list}
+▪️ Stopped containers: {info["ContainersStopped"]}{stopped_container_list}'''
 
 
 @_command(
