@@ -58,6 +58,7 @@ def init_telegram(token: str,
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
     for k in commands.commands:
+        logging.debug(f'Registering command {k}')
         dispatcher.add_handler(CommandHandler(
             k,
             partial(commands.commands[k], docker_client),

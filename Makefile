@@ -5,4 +5,4 @@ check:
 	@mypy src/*.py
 
 run:
-	@sudo ./run.sh
+	@sudo -E ./run.sh

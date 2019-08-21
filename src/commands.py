@@ -15,9 +15,8 @@ Command = Callable[[DockerClient, Bot, Updater, List[str]], None]
 commands = {}  # type: Dict[str, Command]
 commands_help = {}  # type: Dict[str, str]
 command_keyboard = [
-    [
-        "/start", "/info", "/help"
-    ]
+    ["/start", "/info", "/help"],
+    ["/restart"]
 ]  # type: List[List[Union[str, KeyboardButton]]]
 
 
@@ -33,6 +32,7 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
                     update: Updater,
                     args: List[str]) -> None:
             try:
+                logging.debug(f'Called command {name} with args {args}')
                 cmd(client, bot, update, args)
             except docker.errors.APIError as e:
                 reply_error(f'Docker daemon raised an API error: {str(e)}',
@@ -40,9 +40,9 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
         if name:
             global commands
             global commands_help
-            commands[name] = cmd
+            commands[name] = wrapper
             commands_help[name] = help_msg
-        return cmd
+        return wrapper
     return decorator
 
 
@@ -122,15 +122,24 @@ def command_info_docker(client: DockerClient) -> str:
 
 
 @__command__(
-    "restart"
+    "restart",
     """Usage: `/restart <CONTAINER>`
-Restarts container `CONTAINER`."""
-)
+Restarts container `CONTAINER`.""")
 def command_restart(client: DockerClient,
                     bot: Bot,
                     update: Updater,
                     args: List[str]) -> None:
-    pass
+    if not expect_arg_count(1, args, bot, update):
+        return
+    container_name = args[0]
+    try:
+        container = client.containers.get(container_name)
+        message = reply(f'🔄 Restarting container `{container_name}`.',
+                        bot, update)
+        container.restart()
+        edit_reply(f'🆗 Restarted container `{container_name}`.', message)
+    except docker.errors.NotFound:
+        reply_error(f'Container \"{container_name}\" not found.', bot, update)
 
 
 @__command__(
