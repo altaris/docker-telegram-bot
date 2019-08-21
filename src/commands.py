@@ -1,15 +1,15 @@
 import docker
 from docker import DockerClient
 import logging
-from telegram import Bot, KeyboardButton, ParseMode, ReplyKeyboardMarkup
-from telegram.ext import Updater
+from telegram import (
+    Bot, KeyboardButton, ParseMode, ReplyKeyboardMarkup, Update)
 from typing import Callable, Dict, List, Optional, Union
 
 
 from utils import *
 
 
-Command = Callable[[DockerClient, Bot, Updater, List[str]], None]
+Command = Callable[[DockerClient, Bot, Update, List[str]], None]
 
 
 commands = {}  # type: Dict[str, Command]
@@ -29,7 +29,7 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
     def decorator(cmd: Command):
         def wrapper(client: DockerClient,
                     bot: Bot,
-                    update: Updater,
+                    update: Update,
                     args: List[str]) -> None:
             try:
                 logging.debug(f'Called command {name} with args {args}')
@@ -52,7 +52,7 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
 Displays help message about `COMMAND` if available.""")
 def command_help(client: DockerClient,
                  bot: Bot,
-                 update: Updater,
+                 update: Update,
                  args: List[str]) -> None:
     if not expect_arg_count(1, args, bot, update):
         return
@@ -76,30 +76,32 @@ def command_help(client: DockerClient,
 Provides global informations about the current docker daemon, or about `CONTAINER`, if specified.""")
 def command_info(client: DockerClient,
                  bot: Bot,
-                 update: Updater,
+                 update: Update,
                  args: List[str]) -> None:
     if not expect_max_arg_count(1, args, bot, update):
         return
     if len(args) == 0:
-        reply(command_info_docker(client), bot, update)
+        command_info_docker(client, bot, update)
     else:
-        container_name = args[0]
-        try:
-            reply(command_info_container(client, container_name), bot, update)
-        except docker.errors.NotFound:
-            reply_error(f'Container \"{container_name}\" not found.', bot,
-                        update)
+        command_info_container(client, bot, update, args[0])
 
 
-def command_info_container(client: DockerClient, container_name: str) -> str:
-    c = client.containers.get(container_name)
-    return f'''*Container `{c.short_id} {c.name}`:*
-️️️️️️️▪️ Image: {c.image}
-️️️️️️️▪️ Status: {c.status}
-️️️️️️️▪️ Labels: {c.labels}'''
+def command_info_container(client: DockerClient,
+                           bot: Bot,
+                           update: Update,
+                           container_name: str) -> None:
+    c = get_container(client, bot, update, container_name)
+    if c is not None:
+        message = f'''*Container `{c.short_id} {c.name}`:*
+️️▪️ Image: {c.image}
+️️▪️ Status: {c.status}
+️️▪️ Labels: {c.labels}'''
+    reply(message, bot, update)
 
 
-def command_info_docker(client: DockerClient) -> str:
+def command_info_docker(client: DockerClient,
+                        bot: Bot,
+                        update: Update,) -> None:
     info = client.info()
     running_container_list = "\n".join([''] + [
         f'     - `{c.name}`' for c in
@@ -113,12 +115,13 @@ def command_info_docker(client: DockerClient) -> str:
         f'     - `{c.name}`' for c in
         client.containers.list(filters={"status": "exited"})
     ])
-    return f'''*Docker status* 🐳⚙️
+    message = f'''*Docker status* 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
 ▪️ Memory: {info["MemTotal"]}
 ▪️ Running containers: {info["ContainersRunning"]}{running_container_list}
 ▪️ Paused containers: {info["ContainersPaused"]}{paused_container_list}
 ▪️ Stopped containers: {info["ContainersStopped"]}{stopped_container_list}'''
+    reply(message, bot, update)
 
 
 @__command__(
@@ -127,19 +130,17 @@ def command_info_docker(client: DockerClient) -> str:
 Restarts container `CONTAINER`.""")
 def command_restart(client: DockerClient,
                     bot: Bot,
-                    update: Updater,
+                    update: Update,
                     args: List[str]) -> None:
     if not expect_arg_count(1, args, bot, update):
         return
     container_name = args[0]
-    try:
-        container = client.containers.get(container_name)
+    container = get_container(client, bot, update, container_name)
+    if container:
         message = reply(f'🔄 Restarting container `{container_name}`.',
                         bot, update)
         container.restart()
         edit_reply(f'🆗 Restarted container `{container_name}`.', message)
-    except docker.errors.NotFound:
-        reply_error(f'Container \"{container_name}\" not found.', bot, update)
 
 
 @__command__(
@@ -148,7 +149,7 @@ def command_restart(client: DockerClient,
 (Re)initializes the bot's internal state for that user.""")
 def command_start(client: DockerClient,
                   bot: Bot,
-                  update: Updater,
+                  update: Update,
                   args: List[str]) -> None:
     reply(f'Hello {update.message.from_user.first_name} 👋 I am your personal '
           f'docker assistant. Please select a command.',
