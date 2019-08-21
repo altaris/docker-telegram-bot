@@ -7,6 +7,8 @@ from typing import List, Optional
 
 
 def edit_reply(text: str, message: Message, **kwargs) -> Message:
+    """Edits a telegram.Message.
+    """
     return message.edit_text(
         parse_mode='Markdown',
         text=text,
@@ -18,6 +20,8 @@ def expect_arg_count(arg_count: int,
                      arg_list: List[str],
                      bot: Bot,
                      update: Update) -> bool:
+    """Returns True if the argument count is as expected, returns False and
+    reports otherwise."""
     if len(arg_list) != arg_count:
         reply_error(f'This function expects {arg_count} argument(s).',
                     bot, update)
@@ -29,6 +33,8 @@ def expect_max_arg_count(max_arg_count: int,
                          arg_list: List[str],
                          bot: Bot,
                          update: Update) -> bool:
+    """Returns True if the argument count is as expected, returns False and
+    reports otherwise."""
     if len(arg_list) > max_arg_count:
         reply_error(f'This function expects at most {max_arg_count} '
                     f'argument(s).', bot, update)
@@ -40,6 +46,8 @@ def expect_min_arg_count(min_arg_count: int,
                          arg_list: List[str],
                          bot: Bot,
                          update: Update) -> bool:
+    """Returns True if the argument count is as expected, returns False and
+    reports otherwise."""
     if len(arg_list) < min_arg_count:
         reply_error(f'This function expects at least {min_arg_count} '
                     f'argument(s).', bot, update)
@@ -51,6 +59,10 @@ def get_container(client: DockerClient,
                   bot: Bot,
                   update: Update,
                   container_name: str) -> Optional[Container]:
+    """Gets a container.
+
+    If the container does not exist, return None and reports.
+    """
     container = None  # type: Optional[Container]
     try:
         container = client.containers.get(container_name)
@@ -61,6 +73,7 @@ def get_container(client: DockerClient,
 
 
 def reply(text: str, bot: Bot, update: Update, **kwargs) -> Message:
+    """Sends a Markdown message through Telegram."""
     return bot.send_message(
         chat_id=update.message.chat_id,
         parse_mode='Markdown',
@@ -71,12 +84,14 @@ def reply(text: str, bot: Bot, update: Update, **kwargs) -> Message:
 
 
 def reply_error(message: str, bot: Bot, update: Update) -> Message:
+    """Reports an error."""
     logging.error(f'User "{update.message.from_user.username}" raised an '
                   f'error: {message}')
     return reply(f'❌ *ERROR* ❌\n{message}', bot, update)
 
 
 def reply_warning(message: str, bot: Bot, update: Update) -> Message:
+    """Reports an warning."""
     logging.warning(f'User "{update.message.from_user.username}" raised a '
                     f'warning: {message}')
     return reply(f'⚠️ *WARNING* ⚠️\n{message}', bot, update)
