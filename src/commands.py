@@ -103,24 +103,26 @@ def command_info_docker(client: DockerClient,
                         bot: Bot,
                         update: Update,) -> None:
     info = client.info()
+    running_containers = client.containers.list(filters={"status": "running"})
     running_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in
-        client.containers.list(filters={"status": "running"})
-    ])
+        f'     - `{c.name}`' for c in running_containers])
+    restarting_containers = client.containers.list(
+        filters={"status": "restarting"})
+    restarting_container_list = "\n".join([''] + [
+        f'     - `{c.name}`' for c in restarting_containers])
+    paused_containers = client.containers.list(filters={"status": "paused"})
     paused_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in
-        client.containers.list(filters={"status": "paused"})
-    ])
+        f'     - `{c.name}`' for c in paused_containers])
+    stopped_containers = client.containers.list(filters={"status": "exited"})
     stopped_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in
-        client.containers.list(filters={"status": "exited"})
-    ])
+        f'     - `{c.name}`' for c in stopped_containers])
     message = f'''*Docker status* 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
 ▪️ Memory: {info["MemTotal"]}
-▪️ Running containers: {info["ContainersRunning"]}{running_container_list}
-▪️ Paused containers: {info["ContainersPaused"]}{paused_container_list}
-▪️ Stopped containers: {info["ContainersStopped"]}{stopped_container_list}'''
+▪️ Running containers: {len(running_containers)}{running_container_list}
+▪️ Restarting containers: {len(restarting_containers)}{restarting_container_list}
+▪️ Paused containers: {len(paused_containers)}{paused_container_list}
+▪️ Stopped containers: {len(stopped_containers)}{stopped_container_list}'''
     reply(message, bot, update)
 
 
