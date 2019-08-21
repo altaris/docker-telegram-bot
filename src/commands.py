@@ -122,6 +122,18 @@ def command_info_docker(client: DockerClient) -> str:
 
 
 @__command__(
+    "restart"
+    """Usage: `/restart <CONTAINER>`
+Restarts container `CONTAINER`."""
+)
+def command_restart(client: DockerClient,
+                    bot: Bot,
+                    update: Updater,
+                    args: List[str]) -> None:
+    pass
+
+
+@__command__(
     "start",
     """Usage: `/start`
 (Re)initializes the bot's internal state for that user.""")

@@ -1,6 +1,14 @@
 import logging
-from telegram import Bot, ParseMode, Update
+from telegram import Bot, Message, ParseMode, Update
 from typing import List
+
+
+def edit_reply(text: str, message: Message, **kwargs) -> Message:
+    return message.edit_text(
+        parse_mode='Markdown',
+        text=text,
+        **kwargs
+    )
 
 
 def expect_arg_count(arg_count: int,
@@ -36,23 +44,23 @@ def expect_min_arg_count(min_arg_count: int,
     return True
 
 
-def reply(message: str, bot: Bot, update: Update, **kwargs) -> None:
-    bot.send_message(
+def reply(text: str, bot: Bot, update: Update, **kwargs) -> Message:
+    return bot.send_message(
         chat_id=update.message.chat_id,
         parse_mode='Markdown',
         reply_to_message_id=update.message.message_id,
-        text=message,
+        text=text,
         **kwargs
     )
 
 
-def reply_error(message: str, bot: Bot, update: Update) -> None:
-    reply(f'❌ *ERROR* ❌\n{message}', bot, update)
+def reply_error(message: str, bot: Bot, update: Update) -> Message:
     logging.error(f'User "{update.message.from_user.username}" raised an '
                   f'error: {message}')
+    return reply(f'❌ *ERROR* ❌\n{message}', bot, update)
 
 
-def reply_warning(message: str, bot: Bot, update: Update) -> None:
-    reply(f'⚠️ *WARNING* ⚠️\n{message}', bot, update)
+def reply_warning(message: str, bot: Bot, update: Update) -> Message:
     logging.warning(f'User "{update.message.from_user.username}" raised a '
                     f'warning: {message}')
+    return reply(f'⚠️ *WARNING* ⚠️\n{message}', bot, update)
