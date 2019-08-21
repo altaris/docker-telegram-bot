@@ -15,8 +15,8 @@ Command = Callable[[DockerClient, Bot, Update, List[str]], None]
 commands = {}  # type: Dict[str, Command]
 commands_help = {}  # type: Dict[str, str]
 command_keyboard = [
-    ["/start", "/info", "/help"],
-    ["/restart"]
+    ["/info", "/help"],
+    ["/start", "/stop", "/restart"]
 ]  # type: List[List[Union[str, KeyboardButton]]]
 
 
@@ -145,14 +145,37 @@ def command_restart(client: DockerClient,
 
 @__command__(
     "start",
-    """Usage: `/start`
-(Re)initializes the bot's internal state for that user.""")
+    """Usage: `/start <CONTAINER>`
+Starts container `CONTAINER`.""")
 def command_start(client: DockerClient,
-                  bot: Bot,
-                  update: Update,
-                  args: List[str]) -> None:
-    reply(f'Hello {update.message.from_user.first_name} 👋 I am your personal '
-          f'docker assistant. Please select a command.',
-          bot,
-          update,
-          reply_markup=ReplyKeyboardMarkup(command_keyboard, selective=True))
+                    bot: Bot,
+                    update: Update,
+                    args: List[str]) -> None:
+    if not expect_arg_count(1, args, bot, update):
+        return
+    container_name = args[0]
+    container = get_container(client, bot, update, container_name)
+    if container:
+        message = reply(f'🔄 Starting container `{container_name}`.',
+                        bot, update)
+        container.start()
+        edit_reply(f'🆗 Started container `{container_name}`.', message)
+
+
+@__command__(
+    "stop",
+    """Usage: `/stop <CONTAINER>`
+Stops container `CONTAINER`.""")
+def command_stop(client: DockerClient,
+                    bot: Bot,
+                    update: Update,
+                    args: List[str]) -> None:
+    if not expect_arg_count(1, args, bot, update):
+        return
+    container_name = args[0]
+    container = get_container(client, bot, update, container_name)
+    if container:
+        message = reply(f'🔄 Stopping container `{container_name}`.',
+                        bot, update)
+        container.stop()
+        edit_reply(f'🆗 Stopped container `{container_name}`.', message)
