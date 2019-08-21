@@ -21,7 +21,7 @@ command_keyboard = [
 ]  # type: List[List[Union[str, KeyboardButton]]]
 
 
-def _command(name: Optional[str] = None, help_msg: str = ""):
+def __command__(name: Optional[str] = None, help_msg: str = ""):
     """Decorator for command callbacks.
 
     A command has type commands.Command. This decorator wraps it to catch and
@@ -46,7 +46,7 @@ def _command(name: Optional[str] = None, help_msg: str = ""):
     return decorator
 
 
-@_command(
+@__command__(
     "help",
     """Usage `/help <COMMAND>`
 Displays help message about `COMMAND` if available.""")
@@ -70,7 +70,7 @@ def command_help(client: DockerClient,
               bot, update)
 
 
-@_command(
+@__command__(
     "info",
     """Usage: `/info [CONTAINER]`
 Provides global informations about the current docker daemon, or about `CONTAINER`, if specified.""")
@@ -121,7 +121,7 @@ def command_info_docker(client: DockerClient) -> str:
 ▪️ Stopped containers: {info["ContainersStopped"]}{stopped_container_list}'''
 
 
-@_command(
+@__command__(
     "start",
     """Usage: `/start`
 (Re)initializes the bot's internal state for that user.""")
