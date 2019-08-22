@@ -23,15 +23,16 @@ from telegram import (
     Update
 )
 
-from utils import (
+from docker_utils import (
+    get_container
+)
+from telegram_utils import (
     edit_reply,
     expect_arg_count,
     expect_max_arg_count,
-    get_container,
     reply,
     reply_error
 )
-
 
 Command = Callable[[DockerClient, Bot, Update, List[str]], None]
 

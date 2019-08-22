@@ -1,16 +1,11 @@
-"""Various utilities.
+"""Various telegram utilities.
 """
 
 import logging
 from typing import (
-    List,
-    Optional
+    List
 )
 
-import docker
-from docker.models.containers import (
-    Container
-)
 from telegram import (
     Bot,
     Message,
@@ -68,22 +63,6 @@ def expect_min_arg_count(min_arg_count: int,
                     f'argument(s).', bot, update)
         return False
     return True
-
-
-def get_container(client: docker.DockerClient,
-                  bot: Bot,
-                  update: Update,
-                  container_name: str) -> Optional[Container]:
-    """Gets a container.
-
-    If the container does not exist, return ``None`` and reports.
-    """
-    container = None  # type: Optional[Container]
-    try:
-        container = client.containers.get(container_name)
-    except docker.errors.NotFound:
-        reply_error(f'Container \"{container_name}\" not found.', bot, update)
-    return container
 
 
 def reply(text: str, bot: Bot, update: Update, **kwargs) -> Message:
