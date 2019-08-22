@@ -47,7 +47,8 @@ COMMANDS = {}  # type: Dict[str, Command]
 COMMANDS_HELP = {}  # type: Dict[str, Optional[str]]
 COMMAND_KEYBOARD = ReplyKeyboardMarkup([
     ["/info", "/help"],
-    ["/start", "/stop", "/restart"]
+    ["/start", "/stop", "/restart"],
+    ["/pause", "/unpause"]
 ])  # type: ReplyKeyboardMarkup
 
 
