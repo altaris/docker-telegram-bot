@@ -52,9 +52,9 @@ def main(client: DockerClient,
 
 
 def info_container(client: DockerClient,
-                           bot: Bot,
-                           message: Message,
-                           container_name: str) -> None:
+                   bot: Bot,
+                   message: Message,
+                   container_name: str) -> None:
     """Implentation of command `/info`.
 
     Retrieves and sends general informations about a container.
@@ -69,8 +69,8 @@ def info_container(client: DockerClient,
 
 
 def info_docker(client: DockerClient,
-                        bot: Bot,
-                        message: Message) -> None:
+                bot: Bot,
+                message: Message) -> None:
     """Implentation of command `/info`.
 
     Retrieves and sends general informations about the docker daemon.

@@ -33,11 +33,12 @@ def choose_container(client: docker.DockerClient,
         "Select a container",
         bot,
         message,
-        reply_markup=to_inline_keyboard([
-            (
-                f'{container.name} {emoji_of_status(container.status)}',
-                container.name
-            ) for container in client.containers.list(all=True)],
+        reply_markup=to_inline_keyboard(
+            [
+                (
+                    f'{container.name} {emoji_of_status(container.status)}',
+                    container.name
+                ) for container in client.containers.list(all=True)],
             callback_prefix
         )
     )
