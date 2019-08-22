@@ -55,10 +55,10 @@ def emoji_of_status(status: str) -> str:
     * otherwise: ❓.
     """
     return {
-        "exited": "⏹"
+        "exited": "⏹",
         "paused": "⏸",
         "restarting": "↩",
-        "running": "▶",
+        "running": "▶"
     }.get(status, "❓")
 
 
