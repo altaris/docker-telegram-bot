@@ -12,6 +12,7 @@ from telegram import (
 )
 
 from docker_utils import (
+    emoji_of_status,
     get_container
 )
 from telegram_utils import (
@@ -45,12 +46,12 @@ def main(client: DockerClient,
         )
         return
     if args[0] == "":
-        command_info_docker(client, bot, message)
+        info_docker(client, bot, message)
     else:
-        command_info_container(client, bot, message, args[0])
+        info_container(client, bot, message, args[0])
 
 
-def command_info_container(client: DockerClient,
+def info_container(client: DockerClient,
                            bot: Bot,
                            message: Message,
                            container_name: str) -> None:
@@ -61,13 +62,13 @@ def command_info_container(client: DockerClient,
     container = get_container(client, bot, message, container_name)
     if container is not None:
         text = f'''*Container `{container.short_id} {container.name}`:*
-️️▪️ Image: {container.image}
-️️▪️ Status: {container.status}
+️️▪️ Image: `{container.image}`
+️️▪️ Status: {emoji_of_status(container.status)} ({container.status})
 ️️▪️ Labels: {container.labels}'''
         reply(text, bot, message)
 
 
-def command_info_docker(client: DockerClient,
+def info_docker(client: DockerClient,
                         bot: Bot,
                         message: Message) -> None:
     """Implentation of command `/info`.
