@@ -29,13 +29,14 @@ from telegram import (
     Bot,
     KeyboardButton,
     Message,
+    ReplyKeyboardMarkup,
     Update
 )
 
 from telegram_utils import (
-    expect_arg_count,
     reply,
-    reply_error
+    reply_error,
+    to_inline_keyboard
 )
 
 Command = Callable[[DockerClient, Bot, Message, List[str]], None]
@@ -43,10 +44,10 @@ Command = Callable[[DockerClient, Bot, Message, List[str]], None]
 
 COMMANDS = {}  # type: Dict[str, Command]
 COMMANDS_HELP = {}  # type: Dict[str, Optional[str]]
-COMMAND_KEYBOARD = [
+COMMAND_KEYBOARD = ReplyKeyboardMarkup([
     ["/info", "/help"],
     ["/start", "/stop", "/restart"]
-]  # type: List[List[Union[str, KeyboardButton]]]
+])  # type: ReplyKeyboardMarkup
 
 
 TelegramError = Union[telegram.error.TelegramError,
@@ -60,7 +61,13 @@ def command_help(client: DockerClient,
     """Implentation of builtin command `/help`.
     """
     # pylint: disable=unused-argument
-    if not expect_arg_count(1, args, bot, message):
+    if not args:
+        reply(
+            "Select an option",
+            bot,
+            message,
+            reply_markup=to_inline_keyboard(list(COMMANDS.keys()), "help")
+        )
         return
     command_name = args[0]
     if command_name not in COMMANDS:
@@ -69,10 +76,10 @@ def command_help(client: DockerClient,
     command_doc = COMMANDS_HELP.get(command_name, None)
     if command_doc is None:
         reply(f'No help available for command `{command_name}`.',
-              bot, message)
+              bot, message, reply_markup=COMMAND_KEYBOARD)
     else:
         reply(f"🆘 *Help for command `{command_name}`* 🆘\n{command_doc}",
-              bot, message)
+              bot, message, reply_markup=COMMAND_KEYBOARD)
 
 
 def command_wrapper(command: Command) -> \
