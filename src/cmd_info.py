@@ -15,8 +15,8 @@ from docker_utils import (
     get_container
 )
 from telegram_utils import (
-    expect_max_arg_count,
-    reply
+    reply,
+    to_inline_keyboard
 )
 
 
@@ -31,9 +31,20 @@ def main(client: DockerClient,
          args: List[str]) -> None:
     """Implentation of command `/info`.
     """
-    if not expect_max_arg_count(1, args, bot, message):
-        return
     if not args:
+        reply(
+            "Select an option",
+            bot,
+            message,
+            reply_markup=to_inline_keyboard(
+                ["Docker daemon"] +
+                [container.name for container in
+                 client.containers.list(all = True)],
+                NAME
+            )
+        )
+        return
+    if args[0] == "Docker daemon":
         command_info_docker(client, bot, message)
     else:
         command_info_container(client, bot, message, args[0])
@@ -53,7 +64,7 @@ def command_info_container(client: DockerClient,
 ️️▪️ Image: {container.image}
 ️️▪️ Status: {container.status}
 ️️▪️ Labels: {container.labels}'''
-    reply(text, bot, message)
+        reply(text, bot, message)
 
 
 def command_info_docker(client: DockerClient,
