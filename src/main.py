@@ -1,14 +1,19 @@
-from docker import DockerClient
-from functools import partial
-import logging
-import optparse
-import os
-from telegram import Bot, Update
-import telegram.error
-from telegram.ext import CommandHandler, Updater
-from telegram.ext.filters import Filters
-from typing import Callable, Dict, List, Optional, Union
+"""Main.
+"""
 
+import argparse
+import functools
+import logging
+import os
+from typing import (
+    List,
+    Union
+)
+
+import docker
+import telegram
+
+# pylint: disable=wrong-import-order
 import commands
 
 
@@ -16,13 +21,15 @@ TelegramError = Union[telegram.error.TelegramError,
                       telegram.error.NetworkError]
 
 
-def error_callback(bot: Bot,
-                   update: Update,
+def error_callback(bot: telegram.Bot,
+                   update: telegram.Update,
                    error: TelegramError) -> None:
+    # pylint: disable=line-too-long
     """Custom telegram error callback.
 
     See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
     """
+    # pylint: disable=unused-argument
     try:
         raise error
     except telegram.error.Unauthorized:
@@ -39,40 +46,40 @@ def error_callback(bot: Bot,
         logging.error("TelegramError")
 
 
-def init_docker(server: str) -> DockerClient:
+def init_docker(server: str) -> docker.DockerClient:
     """Inits the docker client.
     """
-    client = DockerClient(base_url=server)
-    logging.info("Connected to docker socket {}".format(server))
+    client = docker.DockerClient(base_url=server)
+    logging.info("Connected to docker socket %s", server)
     return client
 
 
 def init_telegram(token: str,
                   authorized_users: List[int],
-                  docker_client: DockerClient) -> None:
+                  docker_client: docker.DockerClient) -> None:
     """Inits the telegram bot.
 
     Registers commands, polls.
     """
-    updater = Updater(token=token)
+    updater = telegram.ext.Updater(token=token)
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
-    for k in commands.commands:
-        logging.debug(f'Registering command {k}')
-        dispatcher.add_handler(CommandHandler(
+    for k in commands.COMMANDS:
+        logging.debug("Registering command %s", k)
+        dispatcher.add_handler(telegram.ext.CommandHandler(
             k,
-            partial(commands.commands[k], docker_client),
-            filters=Filters.user(authorized_users),
+            functools.partial(commands.COMMANDS[k], docker_client),
+            filters=telegram.ext.filters.Filters.user(authorized_users),
             pass_args=True))
     updater.start_polling()
-    logging.info("Started bot {}".format(updater.bot.id))
+    logging.info("Started bot %s", updater.bot.id)
 
 
 def main():
     """Main function.
     """
-    parser = optparse.OptionParser()
-    parser.add_option(
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
         "-a", "--authorized-user",
         action="append",
         default=[],
@@ -81,20 +88,20 @@ def main():
              "authorized users",
         metavar="USERID",
         type="int")
-    parser.add_option(
+    parser.add_argument(
         "-s", "--server",
         default="unix:///var/run/docker.sock",
         dest="server",
         help="URL to the docker server",
         metavar="URL")
-    parser.add_option(
+    parser.add_argument(
         "-t", "--token",
         dest="token",
         help="Telegram bot token",
         metavar="TOKEN")
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
-    if len(options.authorized_users) == 0:
+    if not options.authorized_users:
         logging.warning("No authorized user set! Use the -a flag")
 
     docker_client = init_docker(options.server)

@@ -1,20 +1,44 @@
-import docker
-from docker import DockerClient
+"""Implementation of the commands supported by of the bot.
+
+A command is a callable that has type ``commands.Command``, and decorated by
+``command.__command__``.
+"""
+
 import logging
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Union
+)
+
+import docker
+from docker import (
+    DockerClient
+)
 from telegram import (
-    Bot, KeyboardButton, ParseMode, ReplyKeyboardMarkup, Update)
-from typing import Callable, Dict, List, Optional, Union
+    Bot,
+    KeyboardButton,
+    Update
+)
 
-
-from utils import *
+from utils import (
+    edit_reply,
+    expect_arg_count,
+    expect_max_arg_count,
+    get_container,
+    reply,
+    reply_error
+)
 
 
 Command = Callable[[DockerClient, Bot, Update, List[str]], None]
 
 
-commands = {}  # type: Dict[str, Command]
-commands_help = {}  # type: Dict[str, str]
-command_keyboard = [
+COMMANDS = {}  # type: Dict[str, Command]
+COMMANDS_HELP = {}  # type: Dict[str, str]
+COMMAND_KEYBOARD = [
     ["/info", "/help"],
     ["/start", "/stop", "/restart"]
 ]  # type: List[List[Union[str, KeyboardButton]]]
@@ -24,7 +48,7 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
     """Decorator for command callbacks.
 
     A command has type commands.Command. This decorator wraps it to catch and
-    report docker.errors.APIError exceptions.
+    report ``docker.errors.APIError exceptions``.
     """
     def decorator(cmd: Command) -> Command:
         def wrapper(client: DockerClient,
@@ -32,35 +56,39 @@ def __command__(name: Optional[str] = None, help_msg: str = ""):
                     update: Update,
                     args: List[str]) -> None:
             try:
-                logging.debug(f'Called command {name} with args {args}')
+                logging.debug("Called command %s with args %s", name, args)
                 cmd(client, bot, update, args)
-            except docker.errors.APIError as e:
-                reply_error(f'Docker daemon raised an API error: {str(e)}',
+            except docker.errors.APIError as error:
+                reply_error(f'Docker daemon raised an API error: {str(error)}',
                             bot, update)
         if name:
-            global commands
-            global commands_help
-            commands[name] = wrapper
-            commands_help[name] = help_msg
+            # pylint: disable=global-statement
+            global COMMANDS
+            global COMMANDS_HELP
+            COMMANDS[name] = wrapper
+            COMMANDS_HELP[name] = help_msg
         return wrapper
     return decorator
 
 
 @__command__(
     "help",
-    """Usage `/help <COMMAND>`
-Displays help message about `COMMAND` if available.""")
+    "Usage `/help <COMMAND>`\nDisplays help message about `COMMAND` if "
+    "available.")
 def command_help(client: DockerClient,
                  bot: Bot,
                  update: Update,
                  args: List[str]) -> None:
+    """Implentation of command `/help`.
+    """
+    # pylint: disable=unused-argument
     if not expect_arg_count(1, args, bot, update):
         return
     command_name = args[0]
-    if command_name not in commands:
+    if command_name not in COMMANDS:
         reply_error(f'Command `{command_name}` not found.', bot, update)
         return
-    command_doc = commands_help.get(command_name, None)
+    command_doc = COMMANDS_HELP.get(command_name, None)
     if command_doc is None:
         reply(f'No help available for command `{command_name}`.',
               bot, update)
@@ -72,15 +100,17 @@ def command_help(client: DockerClient,
 
 @__command__(
     "info",
-    """Usage: `/info [CONTAINER]`
-Provides global informations about the current docker daemon, or about `CONTAINER`, if specified.""")
+    "Usage: `/info [CONTAINER]\nProvides global informations about the "
+    "current docker daemon, or about `CONTAINER`, if specified.")
 def command_info(client: DockerClient,
                  bot: Bot,
                  update: Update,
                  args: List[str]) -> None:
+    """Implentation of command `/info`.
+    """
     if not expect_max_arg_count(1, args, bot, update):
         return
-    if len(args) == 0:
+    if not args:
         command_info_docker(client, bot, update)
     else:
         command_info_container(client, bot, update, args[0])
@@ -90,18 +120,26 @@ def command_info_container(client: DockerClient,
                            bot: Bot,
                            update: Update,
                            container_name: str) -> None:
-    c = get_container(client, bot, update, container_name)
-    if c is not None:
-        message = f'''*Container `{c.short_id} {c.name}`:*
-️️▪️ Image: {c.image}
-️️▪️ Status: {c.status}
-️️▪️ Labels: {c.labels}'''
+    """Implentation of command `/info`.
+
+    Retrieves and sends general informations about a container.
+    """
+    container = get_container(client, bot, update, container_name)
+    if container is not None:
+        message = f'''*Container `{container.short_id} {container.name}`:*
+️️▪️ Image: {container.image}
+️️▪️ Status: {container.status}
+️️▪️ Labels: {container.labels}'''
     reply(message, bot, update)
 
 
 def command_info_docker(client: DockerClient,
                         bot: Bot,
                         update: Update,) -> None:
+    """Implentation of command `/info`.
+
+    Retrieves and sends general informations about the docker daemon.
+    """
     info = client.info()
     running_containers = client.containers.list(filters={"status": "running"})
     running_container_list = "\n".join([''] + [
@@ -128,12 +166,13 @@ def command_info_docker(client: DockerClient,
 
 @__command__(
     "restart",
-    """Usage: `/restart <CONTAINER>`
-Restarts container `CONTAINER`.""")
+    "Usage: `/restart <CONTAINER>`\nRestarts container `CONTAINER`.")
 def command_restart(client: DockerClient,
                     bot: Bot,
                     update: Update,
                     args: List[str]) -> None:
+    """Implentation of command `/restart`.
+    """
     if not expect_arg_count(1, args, bot, update):
         return
     container_name = args[0]
@@ -147,12 +186,13 @@ def command_restart(client: DockerClient,
 
 @__command__(
     "start",
-    """Usage: `/start <CONTAINER>`
-Starts container `CONTAINER`.""")
+    "Usage: `/start <CONTAINER>`\nStarts container `CONTAINER`.")
 def command_start(client: DockerClient,
-                    bot: Bot,
-                    update: Update,
-                    args: List[str]) -> None:
+                  bot: Bot,
+                  update: Update,
+                  args: List[str]) -> None:
+    """Implentation of command `/start`.
+    """
     if not expect_arg_count(1, args, bot, update):
         return
     container_name = args[0]
@@ -166,12 +206,13 @@ def command_start(client: DockerClient,
 
 @__command__(
     "stop",
-    """Usage: `/stop <CONTAINER>`
-Stops container `CONTAINER`.""")
+    "Usage: `/stop <CONTAINER>`\nStops container `CONTAINER`.")
 def command_stop(client: DockerClient,
-                    bot: Bot,
-                    update: Update,
-                    args: List[str]) -> None:
+                 bot: Bot,
+                 update: Update,
+                 args: List[str]) -> None:
+    """Implentation of command `/stop`.
+    """
     if not expect_arg_count(1, args, bot, update):
         return
     container_name = args[0]
