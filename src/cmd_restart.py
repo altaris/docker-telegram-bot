@@ -16,6 +16,7 @@ from docker_utils import (
     get_container
 )
 from telegram_utils import (
+    ask_for_confirmation,
     edit_reply,
     reply
 )
@@ -33,11 +34,15 @@ def main(client: DockerClient,
     """
     if not args:
         choose_container(client, bot, message, NAME)
-        return
     container_name = args[0]
-    container = get_container(client, bot, message, container_name)
-    if container:
-        message = reply(f'🔄 Restarting container `{container_name}`.',
-                        bot, message)
-        container.restart()
-        edit_reply(f'🆗 Restarted container `{container_name}`.', message)
+    if len(args) < 2:
+        ask_for_confirmation(
+            f'This will *restart* `{container_name}`. Are you sure?',
+            bot, message, f'{NAME}:{container_name}')
+    if args[1]:
+        container = get_container(client, bot, message, container_name)
+        if container:
+            message = reply(f'🔄 Restarting container `{container_name}`.',
+                            bot, message)
+            container.restart()
+            edit_reply(f'🆗 Restarted container `{container_name}`.', message)

@@ -34,6 +34,7 @@ from telegram import (
 )
 
 from telegram_utils import (
+    NotEnoughArguments,
     reply,
     reply_error,
     to_inline_keyboard
@@ -97,6 +98,8 @@ def command_wrapper(command: Command) -> \
             command(client, bot, message, args)
         except docker.errors.APIError as err:
             reply_error(f'Docker API error: {str(err)}', bot, message)
+        except NotEnoughArguments:
+            pass
     return wrapper
 
 
@@ -135,9 +138,14 @@ def global_inline_query_handler(client: DockerClient,
     data = update.callback_query.data.split(":")
     command_name = data[0]
     args = data[1:]
+    message = update.callback_query.message
     if command_name in COMMANDS:
-        COMMANDS[command_name](
-            client, bot, update.callback_query.message, args)
+        try:
+            COMMANDS[command_name](client, bot, message, args)
+        except docker.errors.APIError as err:
+            reply_error(f'Docker API error: {str(err)}', bot, message)
+        except NotEnoughArguments:
+            pass
     else:
         logging.error('Global callback query handler: command "%s" unknown',
                       command_name)

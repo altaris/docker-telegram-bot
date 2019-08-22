@@ -15,6 +15,7 @@ from telegram import (
 )
 
 from telegram_utils import (
+    NotEnoughArguments,
     reply,
     reply_error,
     to_inline_keyboard
@@ -38,6 +39,7 @@ def choose_container(client: docker.DockerClient,
             callback_prefix
         )
     )
+    raise NotEnoughArguments
 
 
 def get_container(client: docker.DockerClient,

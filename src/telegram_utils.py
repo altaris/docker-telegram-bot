@@ -17,6 +17,28 @@ from telegram import (
 )
 
 
+class NotEnoughArguments(Exception):
+    pass
+
+
+def ask_for_confirmation(text: str,
+                         bot: Bot,
+                         message: Message,
+                         callback_prefix: str) -> None:
+    """Asks the user for a confirmation.
+    """
+    reply(
+        text,
+        bot,
+        message,
+        reply_markup=to_inline_keyboard(
+            ["Yes", ("No", "")],
+            callback_prefix
+        )
+    )
+    raise NotEnoughArguments
+
+
 def edit_reply(text: str, message: Message, **kwargs) -> Message:
     """Edits a ``telegram.Message``.
     """
@@ -25,48 +47,6 @@ def edit_reply(text: str, message: Message, **kwargs) -> Message:
         text=text,
         **kwargs
     )
-
-
-def expect_arg_count(arg_count: int,
-                     arg_list: List[str],
-                     bot: Bot,
-                     message: Message) -> bool:
-    """Returns True if the argument count is as expected, returns False and
-    reports otherwise.
-    """
-    if len(arg_list) != arg_count:
-        reply_error(f'This function expects {arg_count} argument(s).',
-                    bot, message)
-        return False
-    return True
-
-
-def expect_max_arg_count(max_arg_count: int,
-                         arg_list: List[str],
-                         bot: Bot,
-                         message: Message) -> bool:
-    """Returns ``True`` if the argument count is as expected, returns
-    ``False`` and reports otherwise.
-    """
-    if len(arg_list) > max_arg_count:
-        reply_error(f'This function expects at most {max_arg_count} '
-                    f'argument(s).', bot, message)
-        return False
-    return True
-
-
-def expect_min_arg_count(min_arg_count: int,
-                         arg_list: List[str],
-                         bot: Bot,
-                         message: Message) -> bool:
-    """Returns ``True`` if the argument count is as expected, returns
-    ``False`` and reports otherwise.
-    """
-    if len(arg_list) < min_arg_count:
-        reply_error(f'This function expects at least {min_arg_count} '
-                    f'argument(s).', bot, message)
-        return False
-    return True
 
 
 def reply(text: str, bot: Bot, message: Message, **kwargs) -> Message:
