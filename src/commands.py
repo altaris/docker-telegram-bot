@@ -27,7 +27,6 @@ import telegram
 import telegram.ext
 from telegram import (
     Bot,
-    KeyboardButton,
     Message,
     ReplyKeyboardMarkup,
     Update
