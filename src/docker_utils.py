@@ -32,7 +32,8 @@ def choose_container(client: docker.DockerClient,
         bot,
         message,
         reply_markup=to_inline_keyboard(
-            [container.name for container in client.containers.list()],
+            [container.name for container in
+             client.containers.list(all = True)],
             callback_prefix
         )
     )
