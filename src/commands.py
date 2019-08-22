@@ -19,6 +19,7 @@ from typing import (
     Union
 )
 
+import docker.errors
 from docker import (
     DockerClient
 )
@@ -77,12 +78,18 @@ def command_help(client: DockerClient,
 def command_wrapper(command: Command) -> \
     Callable[[DockerClient, Bot, Update, List[str]], None]:
     """Wrapper that sits between the commands and the telegram SDK.
+
+    Catches and reports ``docker.errors.APIError``.
     """
     def wrapper(client: DockerClient,
                 bot: Bot,
                 update: Update,
                 args: List[str]) -> None:
-        command(client, bot, update.message, args)
+        message = update.message
+        try:
+            command(client, bot, message, args)
+        except docker.errors.APIError as err:
+            reply_error(f'Docker API error: {str(err)}', bot, message)
     return wrapper
 
 
