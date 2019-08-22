@@ -91,7 +91,7 @@ def info_docker(client: DockerClient,
         f'     - `{c.name}`' for c in stopped_containers])
     text = f'''*Docker status* 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
-▪️ Memory: {info["MemTotal"]}
+▪️ Memory: {int(info["MemTotal"])/1000000000} GiB
 ▪️ Running containers: {len(running_containers)}{running_container_list}
 ▪️ Restarting containers: {len(restarting_containers)}{restarting_container_list}
 ▪️ Paused containers: {len(paused_containers)}{paused_container_list}
