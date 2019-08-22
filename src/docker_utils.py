@@ -27,13 +27,14 @@ def choose_container(client: docker.DockerClient,
                      callback_prefix: str) -> None:
     """Gets the user to choose a container.
     """
+
     reply(
         "Select a container",
         bot,
         message,
         reply_markup=to_inline_keyboard(
-            [container.name for container in
-             client.containers.list(all = True)],
+            [(f'{container.name} ({container.status})', container.name)
+             for container in client.containers.list(all=True)],
             callback_prefix
         )
     )

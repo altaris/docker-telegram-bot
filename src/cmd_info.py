@@ -37,14 +37,14 @@ def main(client: DockerClient,
             bot,
             message,
             reply_markup=to_inline_keyboard(
-                ["Docker daemon"] +
-                [container.name for container in
-                 client.containers.list(all = True)],
+                [("Docker daemon", "")] +
+                [(f'{container.name} (container)', container.name)
+                 for container in client.containers.list(all=True)],
                 NAME
             )
         )
         return
-    if args[0] == "Docker daemon":
+    if args[0] == "":
         command_info_docker(client, bot, message)
     else:
         command_info_container(client, bot, message, args[0])
