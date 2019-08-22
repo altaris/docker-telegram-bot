@@ -1,10 +1,16 @@
 """Implementation of the commands supported by of the bot.
 
-A command is a callable that has type ``commands.Command``, and decorated by
-``command.__command__``.
+A command is a callable that has type ``commands.Command``. It is expected to
+be implemented in a ``cmd_commandname.py`` file as function ``main``. Further,
+that ``cmd_commandname`` must have globals ``NAME`` for the command name, and
+``HELP`` for the help text.
 """
 
+import functools
+import importlib
 import logging
+import os
+import re
 from typing import (
     Callable,
     Dict,
@@ -13,23 +19,19 @@ from typing import (
     Union
 )
 
-import docker
 from docker import (
     DockerClient
 )
+import telegram
+import telegram.ext
 from telegram import (
     Bot,
     KeyboardButton,
     Update
 )
 
-from docker_utils import (
-    get_container
-)
 from telegram_utils import (
-    edit_reply,
     expect_arg_count,
-    expect_max_arg_count,
     reply,
     reply_error
 )
@@ -38,49 +40,22 @@ Command = Callable[[DockerClient, Bot, Update, List[str]], None]
 
 
 COMMANDS = {}  # type: Dict[str, Command]
-COMMANDS_HELP = {}  # type: Dict[str, str]
+COMMANDS_HELP = {}  # type: Dict[str, Optional[str]]
 COMMAND_KEYBOARD = [
     ["/info", "/help"],
     ["/start", "/stop", "/restart"]
 ]  # type: List[List[Union[str, KeyboardButton]]]
 
 
-def __command__(name: Optional[str] = None, help_msg: str = ""):
-    """Decorator for command callbacks.
-
-    A command has type commands.Command. This decorator wraps it to catch and
-    report ``docker.errors.APIError exceptions``.
-    """
-    def decorator(cmd: Command) -> Command:
-        def wrapper(client: DockerClient,
-                    bot: Bot,
-                    update: Update,
-                    args: List[str]) -> None:
-            try:
-                logging.debug("Called command %s with args %s", name, args)
-                cmd(client, bot, update, args)
-            except docker.errors.APIError as error:
-                reply_error(f'Docker daemon raised an API error: {str(error)}',
-                            bot, update)
-        if name:
-            # pylint: disable=global-statement
-            global COMMANDS
-            global COMMANDS_HELP
-            COMMANDS[name] = wrapper
-            COMMANDS_HELP[name] = help_msg
-        return wrapper
-    return decorator
+TelegramError = Union[telegram.error.TelegramError,
+                      telegram.error.NetworkError]
 
 
-@__command__(
-    "help",
-    "Usage `/help <COMMAND>`\nDisplays help message about `COMMAND` if "
-    "available.")
 def command_help(client: DockerClient,
                  bot: Bot,
                  update: Update,
                  args: List[str]) -> None:
-    """Implentation of command `/help`.
+    """Implentation of builtin command `/help`.
     """
     # pylint: disable=unused-argument
     if not expect_arg_count(1, args, bot, update):
@@ -94,132 +69,87 @@ def command_help(client: DockerClient,
         reply(f'No help available for command `{command_name}`.',
               bot, update)
     else:
-        reply(f'''🆘 *Help for command `{command_name}`* 🆘
-{command_doc}''',
+        reply(f"🆘 *Help for command `{command_name}`* 🆘\n{command_doc}",
               bot, update)
 
 
-@__command__(
-    "info",
-    "Usage: `/info [CONTAINER]\nProvides global informations about the "
-    "current docker daemon, or about `CONTAINER`, if specified.")
-def command_info(client: DockerClient,
-                 bot: Bot,
-                 update: Update,
-                 args: List[str]) -> None:
-    """Implentation of command `/info`.
+def error_callback(bot: telegram.Bot,
+                   update: telegram.Update,
+                   error: TelegramError) -> None:
+    # pylint: disable=line-too-long
+    """Custom telegram error callback.
+
+    See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
     """
-    if not expect_max_arg_count(1, args, bot, update):
-        return
-    if not args:
-        command_info_docker(client, bot, update)
-    else:
-        command_info_container(client, bot, update, args[0])
+    # pylint: disable=unused-argument
+    try:
+        raise error
+    except telegram.error.Unauthorized as err:
+        logging.error("Unauthorized: %s", str(err))
+    except telegram.error.BadRequest as err:
+        logging.error("BadRequest: %s", str(err))
+    except telegram.error.TimedOut as err:
+        logging.error("TimedOut: %s", str(err))
+    except telegram.error.NetworkError as err:
+        logging.error("NetworkError: %s", str(err))
+    except telegram.error.ChatMigrated as err:
+        logging.error("ChatMigrated: %s", str(err))
+    except telegram.error.TelegramError as err:
+        logging.error("TelegramError: %s", str(err))
 
 
-def command_info_container(client: DockerClient,
-                           bot: Bot,
-                           update: Update,
-                           container_name: str) -> None:
-    """Implentation of command `/info`.
-
-    Retrieves and sends general informations about a container.
+def load_command(command_name: str,
+                 help_text: str,
+                 callback: Command,
+                 command_filter: telegram.ext.filters.BaseFilter,
+                 docker_client: DockerClient,
+                 dispatcher: telegram.ext.Dispatcher) -> None:
+    """Loads a specific command.
     """
-    container = get_container(client, bot, update, container_name)
-    if container is not None:
-        message = f'''*Container `{container.short_id} {container.name}`:*
-️️▪️ Image: {container.image}
-️️▪️ Status: {container.status}
-️️▪️ Labels: {container.labels}'''
-    reply(message, bot, update)
+    logging.debug("Loading command %s", command_name)
+    COMMANDS[command_name] = callback
+    COMMANDS_HELP[command_name] = help_text
+    dispatcher.add_handler(telegram.ext.CommandHandler(
+        command_name,
+        functools.partial(callback, docker_client),
+        filters=command_filter,
+        pass_args=True))
 
 
-def command_info_docker(client: DockerClient,
-                        bot: Bot,
-                        update: Update,) -> None:
-    """Implentation of command `/info`.
+def load_commands(updater: telegram.ext.Updater,
+                  docker_client: DockerClient,
+                  authorized_users: List[int]) -> None:
+    """Loads all commands.
 
-    Retrieves and sends general informations about the docker daemon.
+    Recall that a command is the ``main`` function of a ``cmd_commandname``
+    Python module.
     """
-    info = client.info()
-    running_containers = client.containers.list(filters={"status": "running"})
-    running_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in running_containers])
-    restarting_containers = client.containers.list(
-        filters={"status": "restarting"})
-    restarting_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in restarting_containers])
-    paused_containers = client.containers.list(filters={"status": "paused"})
-    paused_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in paused_containers])
-    stopped_containers = client.containers.list(filters={"status": "exited"})
-    stopped_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in stopped_containers])
-    message = f'''*Docker status* 🐳⚙️
-▪️ Docker version: {info["ServerVersion"]}
-▪️ Memory: {info["MemTotal"]}
-▪️ Running containers: {len(running_containers)}{running_container_list}
-▪️ Restarting containers: {len(restarting_containers)}{restarting_container_list}
-▪️ Paused containers: {len(paused_containers)}{paused_container_list}
-▪️ Stopped containers: {len(stopped_containers)}{stopped_container_list}'''
-    reply(message, bot, update)
+    # pyling: disable=global-statement
+    global COMMANDS
 
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    command_module_files = [
+        basename for basename in os.listdir(current_dir)
+        if os.path.isfile(os.path.join(current_dir, basename))
+        and re.match(r'cmd_\w+\.py', basename)
+    ]
 
-@__command__(
-    "restart",
-    "Usage: `/restart <CONTAINER>`\nRestarts container `CONTAINER`.")
-def command_restart(client: DockerClient,
-                    bot: Bot,
-                    update: Update,
-                    args: List[str]) -> None:
-    """Implentation of command `/restart`.
-    """
-    if not expect_arg_count(1, args, bot, update):
-        return
-    container_name = args[0]
-    container = get_container(client, bot, update, container_name)
-    if container:
-        message = reply(f'🔄 Restarting container `{container_name}`.',
-                        bot, update)
-        container.restart()
-        edit_reply(f'🆗 Restarted container `{container_name}`.', message)
+    dispatcher = updater.dispatcher
+    dispatcher.add_error_handler(error_callback)
+    authorized_users_filter =                                   \
+        telegram.ext.filters.Filters.user(authorized_users) |   \
+        telegram.ext.filters.Filters.text
 
-
-@__command__(
-    "start",
-    "Usage: `/start <CONTAINER>`\nStarts container `CONTAINER`.")
-def command_start(client: DockerClient,
-                  bot: Bot,
-                  update: Update,
-                  args: List[str]) -> None:
-    """Implentation of command `/start`.
-    """
-    if not expect_arg_count(1, args, bot, update):
-        return
-    container_name = args[0]
-    container = get_container(client, bot, update, container_name)
-    if container:
-        message = reply(f'🔄 Starting container `{container_name}`.',
-                        bot, update)
-        container.start()
-        edit_reply(f'🆗 Started container `{container_name}`.', message)
-
-
-@__command__(
-    "stop",
-    "Usage: `/stop <CONTAINER>`\nStops container `CONTAINER`.")
-def command_stop(client: DockerClient,
-                 bot: Bot,
-                 update: Update,
-                 args: List[str]) -> None:
-    """Implentation of command `/stop`.
-    """
-    if not expect_arg_count(1, args, bot, update):
-        return
-    container_name = args[0]
-    container = get_container(client, bot, update, container_name)
-    if container:
-        message = reply(f'🔄 Stopping container `{container_name}`.',
-                        bot, update)
-        container.stop()
-        edit_reply(f'🆗 Stopped container `{container_name}`.', message)
+    for command_module_file in command_module_files:
+        command_module = command_module_file[:-3]
+        module = importlib.import_module(command_module)
+        load_command(module.NAME, module.HELP, module.main,  # type: ignore
+                     authorized_users_filter, docker_client, dispatcher)
+    load_command(
+        "help",
+        "Usage `/help <COMMAND>` (builtin command)\nDisplays help message "
+        "about `COMMAND` if available.",
+        command_help,
+        authorized_users_filter,
+        docker_client,
+        dispatcher)
