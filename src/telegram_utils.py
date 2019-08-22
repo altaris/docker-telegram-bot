@@ -8,8 +8,9 @@ from typing import (
 
 from telegram import (
     Bot,
-    Message,
-    Update
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message
 )
 
 
@@ -26,13 +27,13 @@ def edit_reply(text: str, message: Message, **kwargs) -> Message:
 def expect_arg_count(arg_count: int,
                      arg_list: List[str],
                      bot: Bot,
-                     update: Update) -> bool:
+                     message: Message) -> bool:
     """Returns True if the argument count is as expected, returns False and
     reports otherwise.
     """
     if len(arg_list) != arg_count:
         reply_error(f'This function expects {arg_count} argument(s).',
-                    bot, update)
+                    bot, message)
         return False
     return True
 
@@ -40,13 +41,13 @@ def expect_arg_count(arg_count: int,
 def expect_max_arg_count(max_arg_count: int,
                          arg_list: List[str],
                          bot: Bot,
-                         update: Update) -> bool:
+                         message: Message) -> bool:
     """Returns ``True`` if the argument count is as expected, returns
     ``False`` and reports otherwise.
     """
     if len(arg_list) > max_arg_count:
         reply_error(f'This function expects at most {max_arg_count} '
-                    f'argument(s).', bot, update)
+                    f'argument(s).', bot, message)
         return False
     return True
 
@@ -54,40 +55,55 @@ def expect_max_arg_count(max_arg_count: int,
 def expect_min_arg_count(min_arg_count: int,
                          arg_list: List[str],
                          bot: Bot,
-                         update: Update) -> bool:
+                         message: Message) -> bool:
     """Returns ``True`` if the argument count is as expected, returns
     ``False`` and reports otherwise.
     """
     if len(arg_list) < min_arg_count:
         reply_error(f'This function expects at least {min_arg_count} '
-                    f'argument(s).', bot, update)
+                    f'argument(s).', bot, message)
         return False
     return True
 
 
-def reply(text: str, bot: Bot, update: Update, **kwargs) -> Message:
+def reply(text: str, bot: Bot, message: Message, **kwargs) -> Message:
     """Sends a Markdown message through Telegram.
     """
     return bot.send_message(
-        chat_id=update.message.chat_id,
+        chat_id=message.chat_id,
         parse_mode='Markdown',
-        reply_to_message_id=update.message.message_id,
+        reply_to_message_id=message.message_id,
         text=text,
         **kwargs
     )
 
 
-def reply_error(message: str, bot: Bot, update: Update) -> Message:
+def reply_error(text: str, bot: Bot, message: Message) -> Message:
     """Reports an error.
     """
     logging.error('User "%s" raised an error: %s',
-                  update.message.from_user.username, message)
-    return reply(f'❌ *ERROR* ❌\n{message}', bot, update)
+                  message.from_user.username, text)
+    return reply(f'❌ *ERROR* ❌\n{text}', bot, message)
 
 
-def reply_warning(message: str, bot: Bot, update: Update) -> Message:
+def reply_warning(text: str, bot: Bot, message: Message) -> Message:
     """Reports an warning.
     """
     logging.warning('User "%s" raised a warning: %s',
-                    update.message.from_user.username, message)
-    return reply(f'⚠️ *WARNING* ⚠️\n{message}', bot, update)
+                    message.from_user.username, text)
+    return reply(f'⚠️ *WARNING* ⚠️\n{text}', bot, message)
+
+
+def to_inline_keyboard(lst: List[str],
+                       callback_prefix: str) -> InlineKeyboardMarkup:
+    """Creates an inline keyboard from a list of options (str).
+
+    The buttons callback datas are `callback_prefix:button_text`.
+    """
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            text,
+            callback_data=f'{callback_prefix}:{text}'
+        )]
+        for text in lst
+    ])

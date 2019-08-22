@@ -8,7 +8,7 @@ from typing import (
 from docker import DockerClient
 from telegram import (
     Bot,
-    Update
+    Message
 )
 
 from docker_utils import (
@@ -27,38 +27,38 @@ HELP = "Usage: `/info [CONTAINER]`\nProvides global informations about the " \
 
 def main(client: DockerClient,
          bot: Bot,
-         update: Update,
+         message: Message,
          args: List[str]) -> None:
     """Implentation of command `/info`.
     """
-    if not expect_max_arg_count(1, args, bot, update):
+    if not expect_max_arg_count(1, args, bot, message):
         return
     if not args:
-        command_info_docker(client, bot, update)
+        command_info_docker(client, bot, message)
     else:
-        command_info_container(client, bot, update, args[0])
+        command_info_container(client, bot, message, args[0])
 
 
 def command_info_container(client: DockerClient,
                            bot: Bot,
-                           update: Update,
+                           message: Message,
                            container_name: str) -> None:
     """Implentation of command `/info`.
 
     Retrieves and sends general informations about a container.
     """
-    container = get_container(client, bot, update, container_name)
+    container = get_container(client, bot, message, container_name)
     if container is not None:
-        message = f'''*Container `{container.short_id} {container.name}`:*
+        text = f'''*Container `{container.short_id} {container.name}`:*
 ️️▪️ Image: {container.image}
 ️️▪️ Status: {container.status}
 ️️▪️ Labels: {container.labels}'''
-    reply(message, bot, update)
+    reply(text, bot, message)
 
 
 def command_info_docker(client: DockerClient,
                         bot: Bot,
-                        update: Update,) -> None:
+                        message: Message) -> None:
     """Implentation of command `/info`.
 
     Retrieves and sends general informations about the docker daemon.
@@ -77,11 +77,11 @@ def command_info_docker(client: DockerClient,
     stopped_containers = client.containers.list(filters={"status": "exited"})
     stopped_container_list = "\n".join([''] + [
         f'     - `{c.name}`' for c in stopped_containers])
-    message = f'''*Docker status* 🐳⚙️
+    text = f'''*Docker status* 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
 ▪️ Memory: {info["MemTotal"]}
 ▪️ Running containers: {len(running_containers)}{running_container_list}
 ▪️ Restarting containers: {len(restarting_containers)}{restarting_container_list}
 ▪️ Paused containers: {len(paused_containers)}{paused_container_list}
 ▪️ Stopped containers: {len(stopped_containers)}{stopped_container_list}'''
-    reply(message, bot, update)
+    reply(text, bot, message)

@@ -27,6 +27,7 @@ import telegram.ext
 from telegram import (
     Bot,
     KeyboardButton,
+    Message,
     Update
 )
 
@@ -36,7 +37,7 @@ from telegram_utils import (
     reply_error
 )
 
-Command = Callable[[DockerClient, Bot, Update, List[str]], None]
+Command = Callable[[DockerClient, Bot, Message, List[str]], None]
 
 
 COMMANDS = {}  # type: Dict[str, Command]
@@ -53,24 +54,36 @@ TelegramError = Union[telegram.error.TelegramError,
 
 def command_help(client: DockerClient,
                  bot: Bot,
-                 update: Update,
+                 message: Message,
                  args: List[str]) -> None:
     """Implentation of builtin command `/help`.
     """
     # pylint: disable=unused-argument
-    if not expect_arg_count(1, args, bot, update):
+    if not expect_arg_count(1, args, bot, message):
         return
     command_name = args[0]
     if command_name not in COMMANDS:
-        reply_error(f'Command `{command_name}` not found.', bot, update)
+        reply_error(f'Command `{command_name}` not found.', bot, message)
         return
     command_doc = COMMANDS_HELP.get(command_name, None)
     if command_doc is None:
         reply(f'No help available for command `{command_name}`.',
-              bot, update)
+              bot, message)
     else:
         reply(f"🆘 *Help for command `{command_name}`* 🆘\n{command_doc}",
-              bot, update)
+              bot, message)
+
+
+def command_wrapper(command: Command) -> \
+    Callable[[DockerClient, Bot, Update, List[str]], None]:
+    """Wrapper that sits between the commands and the telegram SDK.
+    """
+    def wrapper(client: DockerClient,
+                bot: Bot,
+                update: Update,
+                args: List[str]) -> None:
+        command(client, bot, update.message, args)
+    return wrapper
 
 
 def error_callback(bot: telegram.Bot,
@@ -98,20 +111,38 @@ def error_callback(bot: telegram.Bot,
         logging.error("TelegramError: %s", str(err))
 
 
+def global_inline_query_handler(client: DockerClient,
+                                bot: Bot,
+                                update: Update) -> None:
+    """Global inline query handler.
+
+    Inline query data is expected to be of the form `cmd:arg1:arg2:...`.
+    """
+    data = update.callback_query.data.split(":")
+    command_name = data[0]
+    args = data[1:]
+    if command_name in COMMANDS:
+        COMMANDS[command_name](
+            client, bot, update.callback_query.message, args)
+    else:
+        logging.error('Global callback query handler: command "%s" unknown',
+                      command_name)
+
+
 def load_command(command_name: str,
                  help_text: str,
-                 callback: Command,
+                 command: Command,
                  command_filter: telegram.ext.filters.BaseFilter,
                  docker_client: DockerClient,
                  dispatcher: telegram.ext.Dispatcher) -> None:
     """Loads a specific command.
     """
     logging.debug("Loading command %s", command_name)
-    COMMANDS[command_name] = callback
+    COMMANDS[command_name] = command
     COMMANDS_HELP[command_name] = help_text
     dispatcher.add_handler(telegram.ext.CommandHandler(
         command_name,
-        functools.partial(callback, docker_client),
+        functools.partial(command_wrapper(command), docker_client),
         filters=command_filter,
         pass_args=True))
 
@@ -124,7 +155,7 @@ def load_commands(updater: telegram.ext.Updater,
     Recall that a command is the ``main`` function of a ``cmd_commandname``
     Python module.
     """
-    # pyling: disable=global-statement
+    # pylint: disable=global-statement
     global COMMANDS
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -136,6 +167,11 @@ def load_commands(updater: telegram.ext.Updater,
 
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
+
+    dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
+        functools.partial(global_inline_query_handler, docker_client)
+    ))
+
     authorized_users_filter =                                   \
         telegram.ext.filters.Filters.user(authorized_users) |   \
         telegram.ext.filters.Filters.text

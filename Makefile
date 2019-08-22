@@ -1,5 +1,5 @@
 
-all: chech run
+all: check run
 
 check:
 	@mypy src/*.py
