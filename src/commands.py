@@ -12,10 +12,13 @@ import logging
 import os
 import re
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
     Optional,
+    Sequence,
+    Tuple,
     Union
 )
 
@@ -27,19 +30,29 @@ import telegram
 import telegram.ext
 from telegram import (
     Bot,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     Message,
     ReplyKeyboardMarkup,
     Update
 )
 
 from telegram_utils import (
-    NotEnoughArguments,
     reply,
     reply_error,
     to_inline_keyboard
 )
 
-Command = Callable[[DockerClient, Bot, Message, List[str]], None]
+# Command = Callable[[DockerClient, Bot, Message, List[str]], None]
+
+# Command = Callable[
+#     [
+#         Bot,                # Telegram bot
+#         Message,            # Telegram message
+#         Dict[str, Any]      # Arguments
+#     ],
+#     None
+# ]
 
 
 COMMANDS = {}  # type: Dict[str, Command]
@@ -55,10 +68,76 @@ TelegramError = Union[telegram.error.TelegramError,
                       telegram.error.NetworkError]
 
 
-def command_help(client: DockerClient,
-                 bot: Bot,
+class NotEnoughArguments(Exception):
+    pass
+    # _arg_name: Optional[str]
+
+    # def __init__(self, arg_name: Optional[str] = None) -> None:
+    #     Exception.__init__(self)
+    #     _arg_name = arg_name
+
+
+class ArgumentSelector:
+
+    def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
+        return []
+
+    def option_inline_keyboard(self,
+                               callback_prefix: str) -> InlineKeyboardMarkup:
+        button_list = []  # type: List[InlineKeyboardButton]
+        for item in self.option_list():
+            if type(item) == str:
+                text, code = item, item
+            elif type(item) == tuple:
+                text, code = item
+            button_list += [InlineKeyboardButton(
+                text,
+                callback_data=f'{callback_prefix}:{code}'
+            )]
+        return InlineKeyboardMarkup([[button] for button in button_list])
+
+
+class YesNoSelector(ArgumentSelector):
+
+    def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
+        return ["Yes", ("No", "")]
+
+
+
+class Command:
+
+    Command.call_store = []
+
+    _bot: Bot
+    _message: Message
+    _arg_dict: Dict[str, Any]
+
+    def get_arg(self,
+                arg_name: str,
+                selector: ArgumentSelector,
+                default: Optional[Any] = None) -> Any:
+        if arg_name in self._arg_dict:
+            return self._arg_dict[arg_name]
+        elif default:
+            return default
+        else:
+            int idx = len(Command.call_store)
+            Command.call_store += [(self, )]
+            reply(
+                "Select an option:",
+                self._bot,
+                self._message,
+                reply_markup=selector.option_inline_keyboard()
+            )
+            raise NotEnoughArguments
+
+    def __call__(self) -> None:
+        raise NotImplementedError
+
+
+def command_help(bot: Bot,
                  message: Message,
-                 args: List[str]) -> None:
+                 args: Dict[str, Any]) -> None:
     """Implentation of builtin command `/help`.
     """
     # pylint: disable=unused-argument
@@ -83,19 +162,21 @@ def command_help(client: DockerClient,
               bot, message, reply_markup=COMMAND_KEYBOARD)
 
 
-def command_wrapper(command: Command) -> \
-    Callable[[DockerClient, Bot, Update, List[str]], None]:
+def command_wrapper(command: Command, global_args: Dict[str, Any]) -> \
+    Callable[[Bot, Update, List[str]], None]:
     """Wrapper that sits between the commands and the telegram SDK.
 
     Catches and reports ``docker.errors.APIError``.
     """
-    def wrapper(client: DockerClient,
-                bot: Bot,
+    def wrapper(bot: Bot,
                 update: Update,
-                args: List[str]) -> None:
+                args_list: List[str]) -> None:
         message = update.message
+        args_dict = {}  # type: Dict[str, Any]
+        for idx, val in enumerate(args_list):
+            args_dict[str(idx)] = val
         try:
-            command(client, bot, message, args)
+            command(bot, message, {**global_args, **args_dict})
         except docker.errors.APIError as err:
             reply_error(f'Docker API error: {str(err)}', bot, message)
         except NotEnoughArguments:
@@ -128,9 +209,10 @@ def error_callback(bot: telegram.Bot,
         logging.error("TelegramError: %s", str(err))
 
 
-def global_inline_query_handler(client: DockerClient,
-                                bot: Bot,
-                                update: Update) -> None:
+
+def inline_query_handler(client: DockerClient,
+                         bot: Bot,
+                         update: Update) -> None:
     """Global inline query handler.
 
     Inline query data is expected to be of the form `cmd:arg1:arg2:...`.
@@ -141,11 +223,11 @@ def global_inline_query_handler(client: DockerClient,
     message = update.callback_query.message
     if command_name in COMMANDS:
         try:
-            COMMANDS[command_name](client, bot, message, args)
-        except docker.errors.APIError as err:
-            reply_error(f'Docker API error: {str(err)}', bot, message)
+            COMMANDS[command_name](bot, message, args)
         except NotEnoughArguments:
             pass
+        except docker.errors.APIError as err:
+            reply_error(f'Docker API error: {str(err)}', bot, message)
     else:
         logging.error('Global callback query handler: command "%s" unknown',
                       command_name)
@@ -164,7 +246,7 @@ def load_command(command_name: str,
     COMMANDS_HELP[command_name] = help_text
     dispatcher.add_handler(telegram.ext.CommandHandler(
         command_name,
-        functools.partial(command_wrapper(command), docker_client),
+        command_wrapper(command, {"docker_client": docker_client}),
         filters=command_filter,
         pass_args=True))
 
@@ -191,18 +273,18 @@ def load_commands(updater: telegram.ext.Updater,
     dispatcher.add_error_handler(error_callback)
 
     dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
-        functools.partial(global_inline_query_handler, docker_client)
+        functools.partial(inline_query_handler, docker_client)
     ))
 
     authorized_users_filter =                                   \
         telegram.ext.filters.Filters.user(authorized_users) |   \
         telegram.ext.filters.Filters.text
 
-    for command_module_file in command_module_files:
-        command_module = command_module_file[:-3]
-        module = importlib.import_module(command_module)
-        load_command(module.NAME, module.HELP, module.main,  # type: ignore
-                     authorized_users_filter, docker_client, dispatcher)
+    # for command_module_file in command_module_files:
+    #     command_module = command_module_file[:-3]
+    #     module = importlib.import_module(command_module)
+    #     load_command(module.NAME, module.HELP, module.main,  # type: ignore
+    #                  authorized_users_filter, docker_client, dispatcher)
     load_command(
         "help",
         "Usage `/help <COMMAND>` (builtin command)\nDisplays help message "

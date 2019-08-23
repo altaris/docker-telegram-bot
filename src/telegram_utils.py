@@ -4,6 +4,7 @@
 import logging
 from typing import (
     List,
+    Optional,
     Sequence,
     Tuple,
     Union
@@ -15,28 +16,6 @@ from telegram import (
     InlineKeyboardMarkup,
     Message
 )
-
-
-class NotEnoughArguments(Exception):
-    pass
-
-
-def ask_for_confirmation(text: str,
-                         bot: Bot,
-                         message: Message,
-                         callback_prefix: str) -> None:
-    """Asks the user for a confirmation.
-    """
-    reply(
-        text,
-        bot,
-        message,
-        reply_markup=to_inline_keyboard(
-            ["Yes", ("No", "")],
-            callback_prefix
-        )
-    )
-    raise NotEnoughArguments
 
 
 def edit_reply(text: str, message: Message, **kwargs) -> Message:
