@@ -17,7 +17,8 @@ Starts a container."""
     def main(self):
         container_name = self.arg(
             "container_name",
-            ContainerSelector(self.docker_client)
+            ContainerSelector(self.docker_client),
+            "Choose a container to *start*:"
         )
         container = self.get_container(container_name)
         if container:

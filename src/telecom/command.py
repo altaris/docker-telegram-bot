@@ -156,7 +156,8 @@ class Command:
 
     def arg(self,
             arg_name: str,
-            selector: ArgumentSelector) -> Any:
+            selector: ArgumentSelector,
+            text: str = "Select an option:") -> Any:
         """This function returns the value of an argument.
 
         If the argument is not available, the selector displays an inline
@@ -173,7 +174,7 @@ class Command:
             self._pending_idx = str(Command.PENDING_COMMANDS_COUNTER)
             Command.PENDING_COMMANDS[self._pending_idx] = self
         self.reply(
-            "Select an option:",
+            text,
             reply_markup=selector.option_inline_keyboard(
                 f'{self._pending_idx}:{arg_name}'
             )
@@ -267,7 +268,11 @@ Displays help message of `COMMAND`."""
             ]
 
     def main(self) -> None:
-        command_name = self.arg("command_name", Help.CommandSelector())
+        command_name = self.arg(
+            "command_name",
+            Help.CommandSelector(),
+            "Choose a command:"
+        )
         if command_name not in Help.HELP_DICT:
             self.reply_error(f'Command `{command_name}` not found.')
             return
