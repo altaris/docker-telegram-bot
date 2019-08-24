@@ -12,5 +12,8 @@ This telegram bot allows you to manage your docker deamon.
 2. Copy a `secret.env` from the `secret.env.template` template;
 3. Run
 ```sh
-sudo ./run.sh
+# To run in shell
+make run
+# To run in docker
+make docker-run
 ```
