@@ -7,25 +7,14 @@ that ``cmd_commandname`` must have globals ``NAME`` for the command name, and
 """
 
 import functools
-import importlib
 import logging
-import os
-import re
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union
+    Optional
 )
 
-import docker.errors
-from docker import (
-    DockerClient
-)
 import telegram
 import telegram.ext
 from telegram import (
@@ -37,22 +26,10 @@ from telegram import (
     Update
 )
 
-from telegram_utils import (
-    reply,
-    reply_error,
-    to_inline_keyboard
+from telecom.selector import (
+    ArgumentSelector,
+    YesNoSelector
 )
-
-# Command = Callable[[DockerClient, Bot, Message, List[str]], None]
-
-# Command = Callable[
-#     [
-#         Bot,                # Telegram bot
-#         Message,            # Telegram message
-#         Dict[str, Any]      # Arguments
-#     ],
-#     None
-# ]
 
 
 COMMANDS = {}  # type: Dict[str, Command]
@@ -64,38 +41,8 @@ COMMAND_KEYBOARD = ReplyKeyboardMarkup([
 ])  # type: ReplyKeyboardMarkup
 
 
-TelegramError = Union[telegram.error.TelegramError,
-                      telegram.error.NetworkError]
-
-
 class NotEnoughArguments(Exception):
     pass
-
-
-class ArgumentSelector:
-
-    def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
-        return []
-
-    def option_inline_keyboard(self,
-                               callback_prefix: str) -> InlineKeyboardMarkup:
-        button_list = []  # type: List[InlineKeyboardButton]
-        for item in self.option_list():
-            if type(item) == str:
-                text, code = item, item
-            elif type(item) == tuple:
-                text, code = item
-            button_list += [InlineKeyboardButton(
-                text,
-                callback_data=f'{callback_prefix}:{code}'
-            )]
-        return InlineKeyboardMarkup([[button] for button in button_list])
-
-
-class YesNoSelector(ArgumentSelector):
-
-    def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
-        return ["Yes", ("No", "")]
 
 
 class Command:
@@ -149,30 +96,66 @@ class Command:
                 Command.CALL_COUNTER += 1
                 self._call_store_idx = str(Command.CALL_COUNTER)
                 Command.CALL_STORE[self._call_store_idx] = self
-            reply(
+            self.reply(
                 "Select an option:",
-                self._bot,
-                self._message,
                 reply_markup=selector.option_inline_keyboard(
                     f'{self._call_store_idx}:{arg_name}'
                 )
             )
             raise NotEnoughArguments
 
+    def edit_reply(self, text: str, **kwargs) -> None:
+        """Edits the last message sent by this command.
+        """
+        self._message = self._message.edit_text(
+            parse_mode='Markdown',
+            text=text,
+            **kwargs
+        )
+
     def main(self) -> None:
         raise NotImplementedError
+
+    def reply(self, text: str, **kwargs) -> None:
+        """Sends a Markdown message through Telegram.
+        """
+        self._message = self._bot.send_message(
+            chat_id=self._message.chat_id,
+            parse_mode='Markdown',
+            reply_to_message_id=self._message.message_id,
+            text=text,
+            **kwargs
+        )
+
+    def reply_error(self, text: str) -> None:
+        """Reports an error.
+        """
+        logging.error('User "%s" raised an error: %s',
+                      self._message.from_user.username, text)
+        self.reply(f'❌ *ERROR* ❌\n{text}')
+
+
+    def reply_warning(self, text: str) -> None:
+        """Reports an warning.
+        """
+        logging.warning('User "%s" raised a warning: %s',
+                        self._message.from_user.username, text)
+        self.reply(f'⚠️ *WARNING* ⚠️\n{text}')
+
+    def set_arg(self, arg_name: str, arg_value: Any) -> None:
+        self._args_dict[arg_name] = arg_value
 
 
 def inline_query_handler(bot: Bot, update: Update) -> None:
     """Global inline query handler.
     """
     data = update.callback_query.data.split(":")
-    logging.info("Received callback query %s", str(data))
+    logging.debug("Received callback query %s", str(data))
     call_idx = data[0]
     arg_name = data[1]
     arg_value = data[2]
     if call_idx in Command.CALL_STORE:
-        Command.CALL_STORE[call_idx]._args_dict[arg_name] = arg_value
+        Command.CALL_STORE[call_idx].set_arg(arg_name, arg_value)
         Command.CALL_STORE[call_idx](bot, update)
     else:
         logging.error("Bad call index %s", call_idx)
@@ -181,13 +164,8 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
 class SimpleCommand(Command):
 
     def main(self) -> None:
-        print(self._args_dict)
         answer = self.arg("answer", YesNoSelector())
-        reply(
-            "You said: " + answer,
-            self._bot,
-            self._message
-        )
+        self.reply("You said: " + answer)
 
 
 # def command_help(bot: Bot,
@@ -217,31 +195,6 @@ class SimpleCommand(Command):
 #               bot, message, reply_markup=COMMAND_KEYBOARD)
 
 
-def error_callback(bot: telegram.Bot,
-                   update: telegram.Update,
-                   error: TelegramError) -> None:
-    # pylint: disable=line-too-long
-    """Custom telegram error callback.
-
-    See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
-    """
-    # pylint: disable=unused-argument
-    try:
-        raise error
-    except telegram.error.Unauthorized as err:
-        logging.error("Unauthorized: %s", str(err))
-    except telegram.error.BadRequest as err:
-        logging.error("BadRequest: %s", str(err))
-    except telegram.error.TimedOut as err:
-        logging.error("TimedOut: %s", str(err))
-    except telegram.error.NetworkError as err:
-        logging.error("NetworkError: %s", str(err))
-    except telegram.error.ChatMigrated as err:
-        logging.error("ChatMigrated: %s", str(err))
-    except telegram.error.TelegramError as err:
-        logging.error("TelegramError: %s", str(err))
-
-
 def register_command(command_name: str,
                      command_class,
                      dispatcher: telegram.ext.Dispatcher,
@@ -257,48 +210,3 @@ def register_command(command_name: str,
         functools.partial(factory, **defaults),
         pass_args=True
     ))
-
-
-def load_commands(updater: telegram.ext.Updater,
-                  docker_client: DockerClient,
-                  authorized_users: List[int]) -> None:
-    """Loads all commands.
-
-    Recall that a command is the ``main`` function of a ``cmd_commandname``
-    Python module.
-    """
-    dispatcher = updater.dispatcher
-    dispatcher.add_error_handler(error_callback)
-    dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
-        inline_query_handler
-    ))
-    register_command("test", SimpleCommand, dispatcher)
-    # current_dir = os.path.dirname(os.path.realpath(__file__))
-    # command_module_files = [
-    #     basename for basename in os.listdir(current_dir)
-    #     if os.path.isfile(os.path.join(current_dir, basename))
-    #     and re.match(r'cmd_\w+\.py', basename)
-    # ]
-
-
-    # dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
-    #     functools.partial(inline_query_handler, docker_client)
-    # ))
-
-    # authorized_users_filter =                                   \
-    #     telegram.ext.filters.Filters.user(authorized_users) |   \
-    #     telegram.ext.filters.Filters.text
-
-    # for command_module_file in command_module_files:
-    #     command_module = command_module_file[:-3]
-    #     module = importlib.import_module(command_module)
-    #     load_command(module.NAME, module.HELP, module.main,  # type: ignore
-    #                  authorized_users_filter, docker_client, dispatcher)
-    # load_command(
-    #     "help",
-    #     "Usage `/help <COMMAND>` (builtin command)\nDisplays help message "
-    #     "about `COMMAND` if available.",
-    #     command_help,
-    #     authorized_users_filter,
-    #     docker_client,
-    #     dispatcher)

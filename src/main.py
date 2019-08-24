@@ -5,17 +5,57 @@ import argparse
 import logging
 import os
 from typing import (
-    List
+    List,
+    Union
 )
 
 import docker
-import telegram
-import telegram.ext
-
-# pylint: disable=wrong-import-order
-from commands import (
-    load_commands
+import docker.errors
+from telegram import (
+    Bot,
+    Update
 )
+import telegram.error
+from telegram.ext import (
+    CallbackQueryHandler,
+    Updater
+)
+
+from telecom.command import (
+    inline_query_handler,
+    register_command,
+    SimpleCommand
+)
+
+
+TelegramError = Union[telegram.error.TelegramError,
+                      telegram.error.NetworkError]
+
+
+def error_callback(bot: Bot,
+                   update: Update,
+                   error: TelegramError) -> None:
+    # pylint: disable=line-too-long
+    """Custom telegram error callback.
+
+    See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
+    """
+    # pylint: disable=unused-argument
+    try:
+        raise error
+    except telegram.error.Unauthorized as err:
+        logging.error("Unauthorized: %s", str(err))
+    except telegram.error.BadRequest as err:
+        logging.error("BadRequest: %s", str(err))
+    except telegram.error.TimedOut as err:
+        logging.error("TimedOut: %s", str(err))
+    except telegram.error.NetworkError as err:
+        logging.error("NetworkError: %s", str(err))
+    except telegram.error.ChatMigrated as err:
+        logging.error("ChatMigrated: %s", str(err))
+    except telegram.error.TelegramError as err:
+        logging.error("TelegramError: %s", str(err))
+
 
 
 def init_docker(server: str) -> docker.DockerClient:
@@ -33,8 +73,11 @@ def init_telegram(token: str,
 
     Registers commands, polls.
     """
-    updater = telegram.ext.Updater(token=token)
-    load_commands(updater, docker_client, authorized_users)
+    updater = Updater(token=token)
+    dispatcher = updater.dispatcher
+    dispatcher.add_error_handler(error_callback)
+    dispatcher.add_handler(CallbackQueryHandler(inline_query_handler))
+    register_command("test", SimpleCommand, dispatcher)
     updater.start_polling()
     logging.info("Started bot %s", updater.bot.id)
 
