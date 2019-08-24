@@ -11,6 +11,9 @@ class Stop(DockerCommand):
     """Implementation of command `/stop`.
     """
 
+    __HELP__ = """▪️ Usage: `/stop CONTAINER`:
+Stops a container."""
+
     def main(self):
         container_name = self.arg(
             "container_name",

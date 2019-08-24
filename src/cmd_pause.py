@@ -11,6 +11,9 @@ class Pause(DockerCommand):
     """Implementation of command `/pause`.
     """
 
+    __HELP__ = """▪️ Usage: `/pause CONTAINER`:
+Pauses a container."""
+
     def main(self):
         container_name = self.arg(
             "container_name",

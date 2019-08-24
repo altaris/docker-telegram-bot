@@ -11,6 +11,9 @@ class Restart(DockerCommand):
     """Implementation of command `/restart`.
     """
 
+    __HELP__ = """▪️ Usage: `/restart CONTAINER`:
+Restarts a container."""
+
     def main(self):
         container_name = self.arg(
             "container_name",

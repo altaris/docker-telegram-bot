@@ -24,9 +24,11 @@ from telegram.ext import (
 
 from telecom.command import (
     inline_query_handler,
-    register_command
+    register_command,
+    register_help_command
 )
 
+import cmd_info
 import cmd_pause
 import cmd_restart
 import cmd_start
@@ -85,6 +87,17 @@ def init_telegram(token: str,
     dispatcher.add_error_handler(error_callback)
     dispatcher.add_handler(CallbackQueryHandler(inline_query_handler))
 
+    register_help_command(dispatcher)
+
+    register_command(
+        dispatcher,
+        "info",
+        cmd_info.Info,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
     register_command(
         dispatcher,
         "pause",

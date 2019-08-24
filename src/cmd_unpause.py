@@ -11,6 +11,9 @@ class Unpause(DockerCommand):
     """Implementation of command `/unpause`.
     """
 
+    __HELP__ = """▪️ Usage: `/unpause CONTAINER`:
+Unpauses a container."""
+
     def main(self):
         container_name = self.arg(
             "container_name",

@@ -31,6 +31,11 @@ class Info(DockerCommand):
     """Implentation of command `/info`.
     """
 
+    __HELP__ = """▪️ Usage: `/info`:
+Displays informations about the docker "daemon.
+▪️ Usage: `/info CONTAINER`:
+Displays informations about a container."""
+
     def info_container(self, container_name: str) -> None:
         """Implentation of command `/info`.
 

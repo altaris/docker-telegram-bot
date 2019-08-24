@@ -11,6 +11,9 @@ class Start(DockerCommand):
     """Implementation of command `/start`.
     """
 
+    __HELP__ = """▪️ Usage: `/start CONTAINER`:
+Starts a container."""
+
     def main(self):
         container_name = self.arg(
             "container_name",
