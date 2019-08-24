@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implementation of the commands supported by of the bot.
-
-A command is a callable that has type ``commands.Command``. It is expected to
-be implemented in a ``cmd_commandname.py`` file as function ``main``. Further,
-that ``cmd_commandname`` must have globals ``NAME`` for the command name, and
-``HELP`` for the help text.
+"""Implementation of command related abstract classes and functions.
 """
 
 from enum import (
@@ -27,6 +22,7 @@ from typing import (
 from telegram import (
     Bot,
     Message,
+    ParseMode,
     Update
 )
 from telegram.ext import (
@@ -48,8 +44,8 @@ COMMANDS = {}  # type: Dict[str, Command]
 class NotEnoughArguments(Exception):
     """This exception is raised when a command doesn't have enough argument.
 
-    It is caught by `Command.__call__`, so in practice, it just interrupts the
-    execution flow.
+    It is caught by ``Command.__call__``, so in practice, it just interrupts
+    the execution flow.
     """
 
 
@@ -57,12 +53,44 @@ class Command:
     """This class represent an abstract command that can be issued over
     telegram.
 
-    Simply derive this class and implement `telecom.Command.main`. A help
-    message can be stored in class static member `telecom.Command.__HELP__`.
+    Simply derive this class and implement ``telecom.Command.main``. A help
+    message can be stored in class static member ``telecom.Command.__HELP__``.
+
+    Attributes:
+        PENDING_COMMANDS: Global dict of pending commands.
+        PENDING_COMMANDS_COUNTER: A global counter that is incremented each
+            a new pending command is added to PENDING_COMMANDS
+        GLOBAL_HOOKS: A global dict containing all hooks.
+        __HELP__: Help text of that command.
+        _args_dict: Argument dict.
+        _bot: Telegram bot that called this command.
+        _first_call: Wether this is the first time this command instance is
+            called.
+        _message: Either the user message that called this command, or the last
+            message the command sent.
+        _pending_idx: Key of this command in PENDING_COMMANDS, or ``None`` if
+            the command is not pending.
     """
 
     class HookType(IntEnum):
         """Hook types.
+
+        A hook is a function called at certain points of the execution of a
+        command. They are added using ``telecom.command.add_command_hook``.
+        There can be multiple functions per hook.
+
+        The currently supported hook types are:
+            * `ON_CALLED_FOR_THE_FIRST_TIME`: when the command instance is
+              called for the first time;
+            * `ON_CALLED_NOT_FOR_THE_FIRST_TIME`: when the command instance is
+               called but not for the first time;
+            * `ON_CREATED`: when the command instance is created;
+            * `ON_FINISHED`: when the command instance finishes execution
+               NORMALLY;
+            * `ON_NOT_ENOUGH_ARGUMENTS`: when the execution of the command is
+              interrupted because of missing arguments;
+            * `ON_RAISED_EXCEPTION`: when an exception (other than
+              ``telecom.command.NotEnoughArguments``) is raised.
         """
         ON_CALLED_FOR_THE_FIRST_TIME = auto()
         ON_CALLED_NOT_FOR_THE_FIRST_TIME = auto()
@@ -72,26 +100,27 @@ class Command:
         ON_RAISED_EXCEPTION = auto()
 
 
-    CALL_STORE = {}  # type: Dict[str, Command]
-    CALL_COUNTER: int = 0
+    PENDING_COMMANDS = {}  # type: Dict[str, Command]
+    PENDING_COMMANDS_COUNTER: int = 0
     GLOBAL_HOOKS = {}  # type: Dict[HookType, Sequence[Callable[[Command], None]]]
 
     __HELP__: Optional[str] = None
 
-    _args_dict: Dict[str, Any] = {}
+    _args_dict: Dict[str, Any]
     _bot: Bot
-    _call_store_idx: Optional[str] = None
-    _first_call: bool = True
+    _first_call: bool
     _message: Message
+    _pending_idx: Optional[str]
 
     def __call__(self,
                  bot: Bot,
                  update: Update,
                  args: List[str],
                  **kwargs) -> None:
-        """The command is called through this method.
+        """The command is called through this method by the telegram dispatcher.
 
-        Do not reimplement this.
+        Do not reimplement this. It calls hooks and catches
+        ``telecom.command.NotEnoughArguments`` exceptions.
         """
         if self._first_call:
             self._bot = bot
@@ -100,11 +129,13 @@ class Command:
             self.call_hooks(Command.HookType.ON_CALLED_FOR_THE_FIRST_TIME)
         else:
             self.call_hooks(Command.HookType.ON_CALLED_NOT_FOR_THE_FIRST_TIME)
+
         for key, val in kwargs.items():
             if key not in self._args_dict:
                 self._args_dict[key] = val
         for idx, val in enumerate(args):
             self._args_dict[str(idx)] = val
+
         try:
             self.main()
         except NotEnoughArguments:
@@ -113,14 +144,13 @@ class Command:
             self.call_hooks(Command.HookType.ON_RAISED_EXCEPTION)
             raise
         else:
-            if self._call_store_idx in Command.CALL_STORE:
-                Command.CALL_STORE.pop(self._call_store_idx)
+            if self._pending_idx in Command.PENDING_COMMANDS:
+                Command.PENDING_COMMANDS.pop(self._pending_idx)
             self.call_hooks(Command.HookType.ON_FINISHED)
-
 
     def __init__(self):
         self._args_dict = {}
-        self._call_store_idx = None
+        self._pending_idx = None
         self._first_call = True
         self.call_hooks(Command.HookType.ON_CREATED)
 
@@ -130,27 +160,31 @@ class Command:
         """This function returns the value of an argument.
 
         If the argument is not available, the selector displays an inline
-        keyboard, and the command instance is stored in
-        `telecom.Command.CALL_STORE` waiting to be called again with the
-        missing argument.
+        keyboard, and the command instance raises a
+        ``telecom.command.NotEnoughArguments`` exception instance so as to be
+        stored in ``telecom.Command.PENDING_COMMANDS`` (see
+        ``telecom.command.Command.__call__``) waiting to be called again with
+        the missing argument.
         """
         if arg_name in self._args_dict:
             return self._args_dict[arg_name]
-        else:
-            if not self._call_store_idx:
-                Command.CALL_COUNTER += 1
-                self._call_store_idx = str(Command.CALL_COUNTER)
-                Command.CALL_STORE[self._call_store_idx] = self
-            self.reply(
-                "Select an option:",
-                reply_markup=selector.option_inline_keyboard(
-                    f'{self._call_store_idx}:{arg_name}'
-                )
+        if not self._pending_idx:
+            Command.PENDING_COMMANDS_COUNTER += 1
+            self._pending_idx = str(Command.PENDING_COMMANDS_COUNTER)
+            Command.PENDING_COMMANDS[self._pending_idx] = self
+        self.reply(
+            "Select an option:",
+            reply_markup=selector.option_inline_keyboard(
+                f'{self._pending_idx}:{arg_name}'
             )
-            raise NotEnoughArguments
+        )
+        raise NotEnoughArguments
 
     def call_hooks(self, hook_type: HookType):
         """Calls all hooks of a given type.
+
+        Hooks are called in the order they have been added using
+        ``telecom.command.add_command_hook``.
         """
         for hook in Command.GLOBAL_HOOKS.get(hook_type, []):
             hook(self)
@@ -165,22 +199,27 @@ class Command:
         """Edits the last message sent by this command.
         """
         self._message = self._message.edit_text(
-            parse_mode='Markdown',
+            parse_mode=ParseMode.MARKDOWN,
             text=text,
             **kwargs
         )
 
     def main(self) -> None:
-        """Implement this method.
+        """Main code of the command.
+
+        This function may be executed multiple times even if the telegram user
+        invokes it once. This is due to the execution flow breaking
+        ``telecom.command.NotEnoughArgument`` that is raised when missing
+        arguments are requested.
         """
         raise NotImplementedError
 
     def reply(self, text: str, **kwargs) -> None:
-        """Sends a Markdown message through Telegram.
+        """Sends a markdown message through telegram.
         """
         self._message = self._bot.send_message(
             chat_id=self._message.chat_id,
-            parse_mode='Markdown',
+            parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=self._message.message_id,
             text=text,
             **kwargs
@@ -257,9 +296,9 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
     call_idx = data[0]
     arg_name = data[1]
     arg_value = data[2]
-    if call_idx in Command.CALL_STORE:
-        Command.CALL_STORE[call_idx].set_arg(arg_name, arg_value)
-        Command.CALL_STORE[call_idx](bot, update, [])
+    if call_idx in Command.PENDING_COMMANDS:
+        Command.PENDING_COMMANDS[call_idx].set_arg(arg_name, arg_value)
+        Command.PENDING_COMMANDS[call_idx](bot, update, [])
     else:
         logging.error("Bad call index %s", call_idx)
 

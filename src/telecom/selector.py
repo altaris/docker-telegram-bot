@@ -28,6 +28,13 @@ class ArgumentSelector:
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
         """Implement this.
+
+        This method returns the list of options. An option is either a button
+        label, or a tuple formed by a button label and a button code. The code
+        is returned through the inline query mechanism of telegram if
+        available, otherwise, the label is.
+
+        See https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html
         """
         raise NotImplementedError
 
