@@ -2,98 +2,90 @@
 """
 
 from typing import (
-    List
-)
-
-from docker import DockerClient
-from telegram import (
-    Bot,
-    Message
+    List,
+    Sequence,
+    Tuple,
+    Union
 )
 
 from docker_utils import (
-    emoji_of_status,
-    get_container
-)
-from telegram_utils import (
-    reply,
-    to_inline_keyboard
+    ContainerSelector,
+    DockerCommand,
+    emoji_of_status
 )
 
 
-NAME = "info"
-HELP = "Usage: `/info [CONTAINER]`\nProvides global informations about the " \
-       "current docker daemon, or about `CONTAINER`, if specified."
+class InfoSelector(ContainerSelector):
+    """Adds the `Docker daemon` option to `docker_utils.ContainerSelector`.
+    """
+
+    def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
+        item = [
+            ("Docker daemon", "")
+        ]  # type: List[Union[str, Tuple[str, str]]]
+        return item + list(ContainerSelector.option_list(self))
 
 
-def main(client: DockerClient,
-         bot: Bot,
-         message: Message,
-         args: List[str]) -> None:
+class Info(DockerCommand):
     """Implentation of command `/info`.
     """
-    if not args:
-        reply(
-            "Select an option",
-            bot,
-            message,
-            reply_markup=to_inline_keyboard(
-                [("Docker daemon", "")] +
-                [(f'{container.name} (container)', container.name)
-                 for container in client.containers.list(all=True)],
-                NAME
-            )
+
+    def info_container(self, container_name: str) -> None:
+        """Implentation of command `/info`.
+
+        Retrieves and sends general informations about a container.
+        """
+        container = self.get_container(container_name)
+        if container is not None:
+            text = f'''*Container `{container.short_id} {container.name}`:*
+▪️ Image: `{container.image}`
+▪️ Status: {emoji_of_status(container.status)} ({container.status})
+▪️ Labels: {container.labels}'''
+            self.reply(text)
+
+
+    def info_docker(self) -> None:
+        """Implentation of command `/info`.
+
+        Retrieves and sends general informations about the docker daemon.
+        """
+        info = self.docker_client.info()
+        running_containers = self.docker_client.containers.list(
+            filters={"status": "running"}
         )
-        return
-    if args[0] == "":
-        info_docker(client, bot, message)
-    else:
-        info_container(client, bot, message, args[0])
-
-
-def info_container(client: DockerClient,
-                   bot: Bot,
-                   message: Message,
-                   container_name: str) -> None:
-    """Implentation of command `/info`.
-
-    Retrieves and sends general informations about a container.
-    """
-    container = get_container(client, bot, message, container_name)
-    if container is not None:
-        text = f'''*Container `{container.short_id} {container.name}`:*
-️️▪️ Image: `{container.image}`
-️️▪️ Status: {emoji_of_status(container.status)} ({container.status})
-️️▪️ Labels: {container.labels}'''
-        reply(text, bot, message)
-
-
-def info_docker(client: DockerClient,
-                bot: Bot,
-                message: Message) -> None:
-    """Implentation of command `/info`.
-
-    Retrieves and sends general informations about the docker daemon.
-    """
-    info = client.info()
-    running_containers = client.containers.list(filters={"status": "running"})
-    running_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in running_containers])
-    restarting_containers = client.containers.list(
-        filters={"status": "restarting"})
-    restarting_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in restarting_containers])
-    paused_containers = client.containers.list(filters={"status": "paused"})
-    paused_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in paused_containers])
-    stopped_containers = client.containers.list(filters={"status": "exited"})
-    stopped_container_list = "\n".join([''] + [
-        f'     - `{c.name}`' for c in stopped_containers])
-    text = f'''*Docker status* 🐳⚙️
+        running_container_list = "\n".join([''] + [
+            f'     - `{c.name}`' for c in running_containers
+        ])
+        restarting_containers = self.docker_client.containers.list(
+            filters={"status": "restarting"}
+        )
+        restarting_container_list = "\n".join([''] + [
+            f'     - `{c.name}`' for c in restarting_containers
+        ])
+        paused_containers = self.docker_client.containers.list(
+            filters={"status": "paused"}
+        )
+        paused_container_list = "\n".join([''] + [
+            f'     - `{c.name}`' for c in paused_containers
+        ])
+        stopped_containers = self.docker_client.containers.list(
+            filters={"status": "exited"}
+        )
+        stopped_container_list = "\n".join([''] + [
+            f'     - `{c.name}`' for c in stopped_containers
+        ])
+        text = f'''*Docker status* 🐳⚙️
 ▪️ Docker version: {info["ServerVersion"]}
 ▪️ Memory: {int(info["MemTotal"])/1000000000} GiB
 ▪️ Running containers: {len(running_containers)}{running_container_list}
 ▪️ Restarting containers: {len(restarting_containers)}{restarting_container_list}
 ▪️ Paused containers: {len(paused_containers)}{paused_container_list}
 ▪️ Stopped containers: {len(stopped_containers)}{stopped_container_list}'''
-    reply(text, bot, message)
+        self.reply(text)
+
+    def main(self) -> None:
+        item = self.arg("item", InfoSelector(self.docker_client))
+        if item == "":
+            self.info_docker()
+        else:
+            self.info_container(item)

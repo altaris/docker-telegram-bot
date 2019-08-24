@@ -30,8 +30,7 @@ from telegram import (
 )
 
 from telecom.selector import (
-    ArgumentSelector,
-    YesNoSelector
+    ArgumentSelector
 )
 
 
@@ -82,8 +81,6 @@ class Command:
             self._message = update.message
             self._first_call = False
         for key, val in kwargs.items():
-            print(key)
-            print(val)
             if key not in self._args_dict:
                 self._args_dict[key] = val
         for idx, val in enumerate(args):
@@ -186,15 +183,6 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
         Command.CALL_STORE[call_idx](bot, update, [])
     else:
         logging.error("Bad call index %s", call_idx)
-
-
-class SimpleCommand(Command):
-    """Test
-    """
-
-    def main(self) -> None:
-        answer = self.arg("answer", YesNoSelector())
-        self.reply("You said: " + answer)
 
 
 # def command_help(bot: Bot,

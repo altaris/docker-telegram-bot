@@ -23,9 +23,14 @@ from telegram.ext import (
 
 from telecom.command import (
     inline_query_handler,
-    register_command,
-    SimpleCommand
+    register_command
 )
+
+import cmd_pause
+import cmd_restart
+import cmd_start
+import cmd_stop
+import cmd_unpause
 
 
 TelegramError = Union[telegram.error.TelegramError,
@@ -75,14 +80,56 @@ def init_telegram(token: str,
     """
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
+
     dispatcher.add_error_handler(error_callback)
     dispatcher.add_handler(CallbackQueryHandler(inline_query_handler))
+
     register_command(
         dispatcher,
-        "test",
-        SimpleCommand,
-        authorized_users=authorized_users
+        "pause",
+        cmd_pause.Pause,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
     )
+    register_command(
+        dispatcher,
+        "restart",
+        cmd_restart.Restart,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
+    register_command(
+        dispatcher,
+        "start",
+        cmd_start.Start,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
+    register_command(
+        dispatcher,
+        "stop",
+        cmd_stop.Stop,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
+    register_command(
+        dispatcher,
+        "unpause",
+        cmd_unpause.Unpause,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
+
     updater.start_polling()
     logging.info("Started bot %s", updater.bot.id)
 
