@@ -77,7 +77,12 @@ def init_telegram(token: str,
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
     dispatcher.add_handler(CallbackQueryHandler(inline_query_handler))
-    register_command("test", SimpleCommand, dispatcher)
+    register_command(
+        dispatcher,
+        "test",
+        SimpleCommand,
+        authorized_users=authorized_users
+    )
     updater.start_polling()
     logging.info("Started bot %s", updater.bot.id)
 

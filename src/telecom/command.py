@@ -15,12 +15,15 @@ from typing import (
     Optional
 )
 
-import telegram
-import telegram.ext
+from telegram.ext import (
+    CommandHandler,
+    Dispatcher
+)
+from telegram.ext.filters import (
+    Filters
+)
 from telegram import (
     Bot,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     Message,
     ReplyKeyboardMarkup,
     Update
@@ -42,10 +45,19 @@ COMMAND_KEYBOARD = ReplyKeyboardMarkup([
 
 
 class NotEnoughArguments(Exception):
-    pass
+    """This exception is raised when a command doesn't have enough argument.
+
+    It is caught by `Command.__call__`, so in practice, it just interrupts the
+    execution flow.
+    """
 
 
 class Command:
+    """This class represent an abstract command that can be issued over
+    telegram.
+
+    Simply derive this class and implement `telecom.Command.main`.
+    """
 
     CALL_STORE = {}  # type: Dict[str, Command]
     CALL_COUNTER = 0
@@ -59,8 +71,12 @@ class Command:
     def __call__(self,
                  bot: Bot,
                  update: Update,
-                 args: List[str] = [],
+                 args: List[str],
                  **kwargs) -> None:
+        """The command is called through this method.
+
+        Do not reimplement this.
+        """
         if self._first_call:
             self._bot = bot
             self._message = update.message
@@ -89,6 +105,13 @@ class Command:
     def arg(self,
             arg_name: str,
             selector: ArgumentSelector) -> Any:
+        """This function returns the value of an argument.
+
+        If the argument is not available, the selector displays an inline
+        keyboard, and the command instance is stored in
+        `telecom.Command.CALL_STORE` waiting to be called again with the
+        missing argument.
+        """
         if arg_name in self._args_dict:
             return self._args_dict[arg_name]
         else:
@@ -114,6 +137,8 @@ class Command:
         )
 
     def main(self) -> None:
+        """Implement this method.
+        """
         raise NotImplementedError
 
     def reply(self, text: str, **kwargs) -> None:
@@ -143,6 +168,8 @@ class Command:
         self.reply(f'⚠️ *WARNING* ⚠️\n{text}')
 
     def set_arg(self, arg_name: str, arg_value: Any) -> None:
+        """Sets the value of an argument.
+        """
         self._args_dict[arg_name] = arg_value
 
 
@@ -156,12 +183,14 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
     arg_value = data[2]
     if call_idx in Command.CALL_STORE:
         Command.CALL_STORE[call_idx].set_arg(arg_name, arg_value)
-        Command.CALL_STORE[call_idx](bot, update)
+        Command.CALL_STORE[call_idx](bot, update, [])
     else:
         logging.error("Bad call index %s", call_idx)
 
 
 class SimpleCommand(Command):
+    """Test
+    """
 
     def main(self) -> None:
         answer = self.arg("answer", YesNoSelector())
@@ -195,18 +224,41 @@ class SimpleCommand(Command):
 #               bot, message, reply_markup=COMMAND_KEYBOARD)
 
 
-def register_command(command_name: str,
+def register_command(dispatcher: Dispatcher,
+                     command_name: str,
                      command_class,
-                     dispatcher: telegram.ext.Dispatcher,
-                     **defaults) -> None:
+                     **kwargs) -> None:
+    """Registers a new command.
+
+    Args:
+        dispatcher (telegram.ext.Dispatcher): Telegram dispatcher
+        command_name (str): Command name
+        command_class (type): Class where the command is implemented
+        defaults (dict): Defaults arguments to be passed to the instances of
+                         that command
+        authorized_users: List of users authorized to call this command; if
+                          none provided, all users are authorized
+    """
+    # global COMMANDS
+
     def factory(*args, **kwargs):
         cmd = command_class()
         cmd(*args, **kwargs)
+
     logging.debug("Registering command %s", command_name)
-    global COMMANDS
+
     COMMANDS[command_name] = command_class
-    dispatcher.add_handler(telegram.ext.CommandHandler(
-        command_name,
-        functools.partial(factory, **defaults),
-        pass_args=True
-    ))
+
+    authorized_users = kwargs.get("authorized_users", [])
+    command_filters = Filters.command
+    if authorized_users:
+        command_filters &= Filters.user(authorized_users)
+
+    dispatcher.add_handler(
+        CommandHandler(
+            command_name,
+            functools.partial(factory, **(kwargs.get("defaults", {}))),
+            pass_args=True,
+            filters=command_filters
+        )
+    )
