@@ -28,6 +28,7 @@ from telecom.command import (
     register_help_command
 )
 
+import cmd_hi
 import cmd_info
 import cmd_pause
 import cmd_restart
@@ -89,6 +90,12 @@ def init_telegram(token: str,
 
     register_help_command(dispatcher)
 
+    register_command(
+        dispatcher,
+        "hi",
+        cmd_hi.Hi,
+        authorized_users=authorized_users
+    )
     register_command(
         dispatcher,
         "info",

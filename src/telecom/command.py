@@ -7,10 +7,15 @@ that ``cmd_commandname`` must have globals ``NAME`` for the command name, and
 ``HELP`` for the help text.
 """
 
+from enum import (
+    auto,
+    IntEnum
+)
 import functools
 import logging
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Optional,
@@ -22,7 +27,6 @@ from typing import (
 from telegram import (
     Bot,
     Message,
-    ReplyKeyboardMarkup,
     Update
 )
 from telegram.ext import (
@@ -39,11 +43,6 @@ from telecom.selector import (
 
 
 COMMANDS = {}  # type: Dict[str, Command]
-COMMAND_KEYBOARD = ReplyKeyboardMarkup([
-    ["/info", "/help"],
-    ["/start", "/stop", "/restart"],
-    ["/pause", "/unpause"]
-])  # type: ReplyKeyboardMarkup
 
 
 class NotEnoughArguments(Exception):
@@ -62,8 +61,20 @@ class Command:
     message can be stored in class static member `telecom.Command.__HELP__`.
     """
 
+    class HookType(IntEnum):
+        """Hook types.
+        """
+        ON_CALLED_FOR_THE_FIRST_TIME = auto()
+        ON_CALLED_NOT_FOR_THE_FIRST_TIME = auto()
+        ON_CREATED = auto()
+        ON_FINISHED = auto()
+        ON_NOT_ENOUGH_ARGUMENTS = auto()
+        ON_RAISED_EXCEPTION = auto()
+
+
     CALL_STORE = {}  # type: Dict[str, Command]
     CALL_COUNTER: int = 0
+    GLOBAL_HOOKS = {}  # type: Dict[HookType, Sequence[Callable[[Command], None]]]
 
     __HELP__: Optional[str] = None
 
@@ -86,6 +97,9 @@ class Command:
             self._bot = bot
             self._message = update.message
             self._first_call = False
+            self.call_hooks(Command.HookType.ON_CALLED_FOR_THE_FIRST_TIME)
+        else:
+            self.call_hooks(Command.HookType.ON_CALLED_NOT_FOR_THE_FIRST_TIME)
         for key, val in kwargs.items():
             if key not in self._args_dict:
                 self._args_dict[key] = val
@@ -94,16 +108,21 @@ class Command:
         try:
             self.main()
         except NotEnoughArguments:
-            pass
+            self.call_hooks(Command.HookType.ON_NOT_ENOUGH_ARGUMENTS)
+        except:
+            self.call_hooks(Command.HookType.ON_RAISED_EXCEPTION)
+            raise
         else:
-            # TODO: If another exception arises, cleanup code isn't executed
             if self._call_store_idx in Command.CALL_STORE:
                 Command.CALL_STORE.pop(self._call_store_idx)
+            self.call_hooks(Command.HookType.ON_FINISHED)
+
 
     def __init__(self):
         self._args_dict = {}
         self._call_store_idx = None
         self._first_call = True
+        self.call_hooks(Command.HookType.ON_CREATED)
 
     def arg(self,
             arg_name: str,
@@ -129,6 +148,18 @@ class Command:
                 )
             )
             raise NotEnoughArguments
+
+    def call_hooks(self, hook_type: HookType):
+        """Calls all hooks of a given type.
+        """
+        for hook in Command.GLOBAL_HOOKS.get(hook_type, []):
+            hook(self)
+
+    def delete_reply(self):
+        """Deletes the last message sent by this command.
+        """
+        self._bot.delete_message(self._message.chat_id,
+                                 self._message.message_id)
 
     def edit_reply(self, text: str, **kwargs) -> None:
         """Edits the last message sent by this command.
@@ -208,6 +239,14 @@ Displays help message of `COMMAND`."""
             self.reply(
                 f'🆘 *Help for command `{command_name}`* 🆘\n{command_doc}'
             )
+
+
+def add_command_hook(hook_type: Command.HookType,
+                     hook: Callable[[Command], None]) -> None:
+    """Adds a global command hook.
+    """
+    Command.GLOBAL_HOOKS[hook_type] = [hook] + \
+        list(Command.GLOBAL_HOOKS.get(hook_type, []))
 
 
 def inline_query_handler(bot: Bot, update: Update) -> None:
