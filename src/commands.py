@@ -70,11 +70,6 @@ TelegramError = Union[telegram.error.TelegramError,
 
 class NotEnoughArguments(Exception):
     pass
-    # _arg_name: Optional[str]
-
-    # def __init__(self, arg_name: Optional[str] = None) -> None:
-    #     Exception.__init__(self)
-    #     _arg_name = arg_name
 
 
 class ArgumentSelector:
@@ -103,85 +98,123 @@ class YesNoSelector(ArgumentSelector):
         return ["Yes", ("No", "")]
 
 
-
 class Command:
 
-    Command.call_store = []
+    CALL_STORE = {}  # type: Dict[str, Command]
+    CALL_COUNTER = 0
 
+    _args_dict: Dict[str, Any] = {}
     _bot: Bot
+    _call_store_idx: Optional[str] = None
+    _first_call: bool = True
     _message: Message
-    _arg_dict: Dict[str, Any]
 
-    def get_arg(self,
-                arg_name: str,
-                selector: ArgumentSelector,
-                default: Optional[Any] = None) -> Any:
-        if arg_name in self._arg_dict:
-            return self._arg_dict[arg_name]
-        elif default:
-            return default
+    def __call__(self,
+                 bot: Bot,
+                 update: Update,
+                 args: List[str] = [],
+                 **kwargs) -> None:
+        if self._first_call:
+            self._bot = bot
+            self._message = update.message
+            self._first_call = False
+        for key, val in kwargs.items():
+            print(key)
+            print(val)
+            if key not in self._args_dict:
+                self._args_dict[key] = val
+        for idx, val in enumerate(args):
+            self._args_dict[str(idx)] = val
+        try:
+            self.main()
+        except NotEnoughArguments:
+            pass
         else:
-            int idx = len(Command.call_store)
-            Command.call_store += [(self, )]
+            # TODO: If another exception arises, cleanup code isn't executed
+            if self._call_store_idx in Command.CALL_STORE:
+                Command.CALL_STORE.pop(self._call_store_idx)
+
+    def __init__(self):
+        self._args_dict = {}
+        self._call_store_idx = None
+        self._first_call = True
+
+    def arg(self,
+            arg_name: str,
+            selector: ArgumentSelector) -> Any:
+        if arg_name in self._args_dict:
+            return self._args_dict[arg_name]
+        else:
+            if not self._call_store_idx:
+                Command.CALL_COUNTER += 1
+                self._call_store_idx = str(Command.CALL_COUNTER)
+                Command.CALL_STORE[self._call_store_idx] = self
             reply(
                 "Select an option:",
                 self._bot,
                 self._message,
-                reply_markup=selector.option_inline_keyboard()
+                reply_markup=selector.option_inline_keyboard(
+                    f'{self._call_store_idx}:{arg_name}'
+                )
             )
             raise NotEnoughArguments
 
-    def __call__(self) -> None:
+    def main(self) -> None:
         raise NotImplementedError
 
 
-def command_help(bot: Bot,
-                 message: Message,
-                 args: Dict[str, Any]) -> None:
-    """Implentation of builtin command `/help`.
+def inline_query_handler(bot: Bot, update: Update) -> None:
+    """Global inline query handler.
     """
-    # pylint: disable=unused-argument
-    if not args:
-        reply(
-            "Select an option",
-            bot,
-            message,
-            reply_markup=to_inline_keyboard(list(COMMANDS.keys()), "help")
-        )
-        return
-    command_name = args[0]
-    if command_name not in COMMANDS:
-        reply_error(f'Command `{command_name}` not found.', bot, message)
-        return
-    command_doc = COMMANDS_HELP.get(command_name, None)
-    if command_doc is None:
-        reply(f'No help available for command `{command_name}`.',
-              bot, message, reply_markup=COMMAND_KEYBOARD)
+    data = update.callback_query.data.split(":")
+    logging.info("Received callback query %s", str(data))
+    call_idx = data[0]
+    arg_name = data[1]
+    arg_value = data[2]
+    if call_idx in Command.CALL_STORE:
+        Command.CALL_STORE[call_idx]._args_dict[arg_name] = arg_value
+        Command.CALL_STORE[call_idx](bot, update)
     else:
-        reply(f"🆘 *Help for command `{command_name}`* 🆘\n{command_doc}",
-              bot, message, reply_markup=COMMAND_KEYBOARD)
+        logging.error("Bad call index %s", call_idx)
 
 
-def command_wrapper(command: Command, global_args: Dict[str, Any]) -> \
-    Callable[[Bot, Update, List[str]], None]:
-    """Wrapper that sits between the commands and the telegram SDK.
+class SimpleCommand(Command):
 
-    Catches and reports ``docker.errors.APIError``.
-    """
-    def wrapper(bot: Bot,
-                update: Update,
-                args_list: List[str]) -> None:
-        message = update.message
-        args_dict = {}  # type: Dict[str, Any]
-        for idx, val in enumerate(args_list):
-            args_dict[str(idx)] = val
-        try:
-            command(bot, message, {**global_args, **args_dict})
-        except docker.errors.APIError as err:
-            reply_error(f'Docker API error: {str(err)}', bot, message)
-        except NotEnoughArguments:
-            pass
-    return wrapper
+    def main(self) -> None:
+        print(self._args_dict)
+        answer = self.arg("answer", YesNoSelector())
+        reply(
+            "You said: " + answer,
+            self._bot,
+            self._message
+        )
+
+
+# def command_help(bot: Bot,
+#                  message: Message,
+#                  args: Dict[str, Any]) -> None:
+#     """Implentation of builtin command `/help`.
+#     """
+#     # pylint: disable=unused-argument
+#     if not args:
+#         reply(
+#             "Select an option",
+#             bot,
+#             message,
+#             reply_markup=to_inline_keyboard(list(COMMANDS.keys()), "help")
+#         )
+#         return
+#     command_name = args[0]
+#     if command_name not in COMMANDS:
+#         reply_error(f'Command `{command_name}` not found.', bot, message)
+#         return
+#     command_doc = COMMANDS_HELP.get(command_name, None)
+#     if command_doc is None:
+#         reply(f'No help available for command `{command_name}`.',
+#               bot, message, reply_markup=COMMAND_KEYBOARD)
+#     else:
+#         reply(f"🆘 *Help for command `{command_name}`* 🆘\n{command_doc}",
+#               bot, message, reply_markup=COMMAND_KEYBOARD)
 
 
 def error_callback(bot: telegram.Bot,
@@ -209,46 +242,21 @@ def error_callback(bot: telegram.Bot,
         logging.error("TelegramError: %s", str(err))
 
 
-
-def inline_query_handler(client: DockerClient,
-                         bot: Bot,
-                         update: Update) -> None:
-    """Global inline query handler.
-
-    Inline query data is expected to be of the form `cmd:arg1:arg2:...`.
-    """
-    data = update.callback_query.data.split(":")
-    command_name = data[0]
-    args = data[1:]
-    message = update.callback_query.message
-    if command_name in COMMANDS:
-        try:
-            COMMANDS[command_name](bot, message, args)
-        except NotEnoughArguments:
-            pass
-        except docker.errors.APIError as err:
-            reply_error(f'Docker API error: {str(err)}', bot, message)
-    else:
-        logging.error('Global callback query handler: command "%s" unknown',
-                      command_name)
-
-
-def load_command(command_name: str,
-                 help_text: str,
-                 command: Command,
-                 command_filter: telegram.ext.filters.BaseFilter,
-                 docker_client: DockerClient,
-                 dispatcher: telegram.ext.Dispatcher) -> None:
-    """Loads a specific command.
-    """
-    logging.debug("Loading command %s", command_name)
-    COMMANDS[command_name] = command
-    COMMANDS_HELP[command_name] = help_text
+def register_command(command_name: str,
+                     command_class,
+                     dispatcher: telegram.ext.Dispatcher,
+                     **defaults) -> None:
+    def factory(*args, **kwargs):
+        cmd = command_class()
+        cmd(*args, **kwargs)
+    logging.debug("Registering command %s", command_name)
+    global COMMANDS
+    COMMANDS[command_name] = command_class
     dispatcher.add_handler(telegram.ext.CommandHandler(
         command_name,
-        command_wrapper(command, {"docker_client": docker_client}),
-        filters=command_filter,
-        pass_args=True))
+        functools.partial(factory, **defaults),
+        pass_args=True
+    ))
 
 
 def load_commands(updater: telegram.ext.Updater,
@@ -259,37 +267,38 @@ def load_commands(updater: telegram.ext.Updater,
     Recall that a command is the ``main`` function of a ``cmd_commandname``
     Python module.
     """
-    # pylint: disable=global-statement
-    global COMMANDS
-
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    command_module_files = [
-        basename for basename in os.listdir(current_dir)
-        if os.path.isfile(os.path.join(current_dir, basename))
-        and re.match(r'cmd_\w+\.py', basename)
-    ]
-
     dispatcher = updater.dispatcher
     dispatcher.add_error_handler(error_callback)
-
     dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
-        functools.partial(inline_query_handler, docker_client)
+        inline_query_handler
     ))
+    register_command("test", SimpleCommand, dispatcher)
+    # current_dir = os.path.dirname(os.path.realpath(__file__))
+    # command_module_files = [
+    #     basename for basename in os.listdir(current_dir)
+    #     if os.path.isfile(os.path.join(current_dir, basename))
+    #     and re.match(r'cmd_\w+\.py', basename)
+    # ]
 
-    authorized_users_filter =                                   \
-        telegram.ext.filters.Filters.user(authorized_users) |   \
-        telegram.ext.filters.Filters.text
+
+    # dispatcher.add_handler(telegram.ext.CallbackQueryHandler(
+    #     functools.partial(inline_query_handler, docker_client)
+    # ))
+
+    # authorized_users_filter =                                   \
+    #     telegram.ext.filters.Filters.user(authorized_users) |   \
+    #     telegram.ext.filters.Filters.text
 
     # for command_module_file in command_module_files:
     #     command_module = command_module_file[:-3]
     #     module = importlib.import_module(command_module)
     #     load_command(module.NAME, module.HELP, module.main,  # type: ignore
     #                  authorized_users_filter, docker_client, dispatcher)
-    load_command(
-        "help",
-        "Usage `/help <COMMAND>` (builtin command)\nDisplays help message "
-        "about `COMMAND` if available.",
-        command_help,
-        authorized_users_filter,
-        docker_client,
-        dispatcher)
+    # load_command(
+    #     "help",
+    #     "Usage `/help <COMMAND>` (builtin command)\nDisplays help message "
+    #     "about `COMMAND` if available.",
+    #     command_help,
+    #     authorized_users_filter,
+    #     docker_client,
+    #     dispatcher)
