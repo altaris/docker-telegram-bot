@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Implementation of the commands supported by of the bot.
 
 A command is a callable that has type ``commands.Command``. It is expected to

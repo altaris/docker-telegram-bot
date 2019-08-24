@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Defines selectors.
 
 A selector is a class that derives from ``telecom.selector.ArgumentSelector``
