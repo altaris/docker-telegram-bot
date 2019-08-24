@@ -16,7 +16,7 @@ Stops a container."""
 
     def main(self):
         container_name = self.arg(
-            "container_name",
+            "0",
             ContainerSelector(self.docker_client),
             "Choose a container to *stop*:"
         )

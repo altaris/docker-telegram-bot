@@ -90,7 +90,7 @@ Displays informations about a container."""
         self.reply(text)
 
     def main(self) -> None:
-        item = self.arg("item", InfoSelector(self.docker_client))
+        item = self.arg("0", InfoSelector(self.docker_client))
         if item == "":
             self.info_docker()
         else:

@@ -269,7 +269,7 @@ Displays help message of `COMMAND`."""
 
     def main(self) -> None:
         command_name = self.arg(
-            "command_name",
+            "0",
             Help.CommandSelector(),
             "Choose a command:"
         )
