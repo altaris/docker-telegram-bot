@@ -14,6 +14,7 @@ import docker
 import docker.errors
 from telegram import (
     Bot,
+    ParseMode,
     Update
 )
 import telegram.error
@@ -50,21 +51,21 @@ def error_callback(bot: Bot,
     See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
     """
     # pylint: disable=unused-argument
-    try:
-        raise error
-    except telegram.error.Unauthorized as err:
-        logging.error("Unauthorized: %s", str(err))
-    except telegram.error.BadRequest as err:
-        logging.error("BadRequest: %s", str(err))
-    except telegram.error.TimedOut as err:
-        logging.error("TimedOut: %s", str(err))
-    except telegram.error.NetworkError as err:
-        logging.error("NetworkError: %s", str(err))
-    except telegram.error.ChatMigrated as err:
-        logging.error("ChatMigrated: %s", str(err))
-    except telegram.error.TelegramError as err:
-        logging.error("TelegramError: %s", str(err))
-
+    error_name = error.__class__.__name__
+    error_message = str(error)
+    logging.error(
+        'User "%s" raised a telegram error %s: %s',
+        update.message.from_user.username,
+        error_name,
+        error_message
+    )
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_to_message_id=update.message.message_id,
+        text=f'''❌ *TELEGRAM ERROR* ❌
+Last command raised a telegram `{error_name}`: {error_message}'''
+    )
 
 
 def init_docker(server: str) -> docker.DockerClient:
