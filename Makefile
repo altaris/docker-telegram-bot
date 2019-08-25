@@ -1,6 +1,8 @@
 IMAGE	= docker-telegram-bot
 SUDO   ?= sudo
 
+LOGGING_LEVEL	?= WARNING
+
 all: check run
 
 check:
@@ -23,6 +25,9 @@ docker-run: build-docker
 
 .ONESHELL:
 run:
-	@$(SUDO) -E -s . ./venv/bin/activate 	&& \
-		. ./secret.env 						&& \
-		python3 src/main.py -a $${TELEGRAM_ADMIN} -t $${TELEGRAM_TOKEN}
+	@$(SUDO) -- sh -c '											\
+		. ./venv/bin/activate; 									\
+		. ./secret.env; 										\
+		LOGGING_LEVEL=$(LOGGING_LEVEL) python3 src/main.py 		\
+			-a $${TELEGRAM_ADMIN} -t $${TELEGRAM_TOKEN}			\
+	'
