@@ -124,17 +124,18 @@ class Command:
         """
         if self._first_call:
             self._bot = bot
-            self._message = update.message
             self._first_call = False
+            self._message = update.message
             self.call_hooks(Command.HookType.ON_CALLED_FOR_THE_FIRST_TIME)
         else:
             self.call_hooks(Command.HookType.ON_CALLED_NOT_FOR_THE_FIRST_TIME)
 
-        for key, val in kwargs.items():
-            if key not in self._args_dict:
-                self._args_dict[key] = val
-        for idx, val in enumerate(args):
-            self._args_dict[str(idx)] = val
+        kwargs_dict = {**kwargs}
+        kwargs_dict.update({
+            str(idx): val for idx, val in enumerate(args)
+        })
+        kwargs_dict.update(self._args_dict)
+        self._args_dict = kwargs_dict
 
         try:
             self.main()
