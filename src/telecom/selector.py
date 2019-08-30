@@ -69,4 +69,4 @@ class YesNoSelector(ArgumentSelector):
     """
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
-        return ["Yes", ("No", "")]
+        return [("Yes ✅", "yes"), ("No ❌", "")]
