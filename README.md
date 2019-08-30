@@ -17,3 +17,4 @@ make run
 # To run in docker
 make docker-run
 ```
+4. Say `/hi` to the bot to get started.
