@@ -34,6 +34,7 @@ import cmd_info
 import cmd_logs
 import cmd_pause
 import cmd_restart
+import cmd_restart_bot
 import cmd_start
 import cmd_stop
 import cmd_unpause
@@ -136,6 +137,15 @@ def init_telegram(token: str,
     )
     register_command(
         dispatcher,
+        "restart_bot",
+        cmd_restart_bot.RestartBot,
+        authorized_users=authorized_users,
+        defaults={
+            "telegram_updater": updater
+        }
+    )
+    register_command(
+        dispatcher,
         "start",
         cmd_start.Start,
         authorized_users=authorized_users,
@@ -164,6 +174,7 @@ def init_telegram(token: str,
 
     updater.start_polling()
     logging.info("Started bot %s", updater.bot.id)
+    updater.idle()
 
 
 def main():

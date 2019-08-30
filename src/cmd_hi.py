@@ -14,7 +14,8 @@ from docker_utils import (
 COMMAND_KEYBOARD = ReplyKeyboardMarkup([
     ["/info", "/logs", "/help"],
     ["/start", "/stop", "/restart"],
-    ["/pause", "/unpause"]
+    ["/pause", "/unpause"],
+    ["/restart_bot"]
 ])  # type: ReplyKeyboardMarkup
 
 
