@@ -22,7 +22,7 @@ class InfoSelector(ContainerSelector):
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
         item = [
-            ("Docker daemon", "")
+            ("Docker daemon 🐳", "")
         ]  # type: List[Union[str, Tuple[str, str]]]
         return item + list(ContainerSelector.option_list(self))
 
