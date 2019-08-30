@@ -14,7 +14,7 @@ docker-build:
 	$(SUDO) docker build -t $(IMAGE):$$(git rev-parse --abbrev-ref HEAD) .
 
 .ONESHELL:
-docker-run: build-docker
+docker-run: docker-build
 	@. ./secret.env
 	@$(SUDO) docker run --rm									\
 		--env "LOGGING_LEVEL=$${LOGGING_LEVEL:-WARNING}"		\
