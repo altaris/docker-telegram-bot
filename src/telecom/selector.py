@@ -26,6 +26,8 @@ class ArgumentSelector:
     """An abstract argument selector.
     """
 
+    COLUMN_COUNT: int = 3
+
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
         """Implement this.
 
@@ -53,7 +55,13 @@ class ArgumentSelector:
                 text,
                 callback_data=f'{callback_prefix}:{code}'
             )]
-        return InlineKeyboardMarkup([[button] for button in button_list])
+        button_layout = []  # type: List[List[InlineKeyboardButton]]
+        for idx, button in enumerate(button_list):
+            if idx % ArgumentSelector.COLUMN_COUNT == 0:
+                button_layout += [[button]]
+            else:
+                button_layout[-1] += [button]
+        return InlineKeyboardMarkup(button_layout)
 
 
 class YesNoSelector(ArgumentSelector):
