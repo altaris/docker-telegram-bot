@@ -44,8 +44,8 @@ Displays informations about a container."""
         container = self.get_container(container_name)
         if container is not None:
             labels_formatted = "\n".join([
-                f'  🏷 `{key}`: `{val}`'
-                for key, val in container.labels
+                f'🏷 `{key}`: `{container.labels.get(key, " ")}`'
+                for key in container.labels
             ])
             text = f'''*Container *`{container.short_id} {container.name}`*:*
 ▪️ Image: `{container.image}`
