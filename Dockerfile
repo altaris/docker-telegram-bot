@@ -7,5 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./
 
-ENTRYPOINT [ "python", "./main.py" ]
-CMD [ "" ]
+CMD python ./main.py -a $TELEGRAM_ADMIN -t $TELEGRAM_TOKEN

@@ -18,10 +18,10 @@ docker-run: docker-build
 	@. ./secret.env
 	@$(SUDO) docker run --rm									\
 		--env "LOGGING_LEVEL=$${LOGGING_LEVEL:-WARNING}"		\
+		--env-file secret.env									\
 		--name $(IMAGE)-test									\
 		--volume /var/run/docker.sock:/var/run/docker.sock 		\
-		$(IMAGE):$$(git rev-parse --abbrev-ref HEAD)			\
-		-a "$${TELEGRAM_ADMIN}" -t "$${TELEGRAM_TOKEN}"
+		$(IMAGE):$$(git rev-parse --abbrev-ref HEAD)
 
 .ONESHELL:
 run:
