@@ -282,7 +282,7 @@ Displays help message of `COMMAND`."""
             self.reply(f'No help available for command `{command_name}`.')
         else:
             self.reply(
-                f'🆘 *Help for command `{command_name}`* 🆘\n{command_doc}'
+                f'🆘 *Help for command* `{command_name}` 🆘\n{command_doc}'
             )
 
 
