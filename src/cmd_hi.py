@@ -12,7 +12,7 @@ from docker_utils import (
 
 
 COMMAND_KEYBOARD = ReplyKeyboardMarkup([
-    ["/info", "/help"],
+    ["/info", "/logs", "/help"],
     ["/start", "/stop", "/restart"],
     ["/pause", "/unpause"]
 ])  # type: ReplyKeyboardMarkup

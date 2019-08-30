@@ -31,6 +31,7 @@ from telecom.command import (
 
 import cmd_hi
 import cmd_info
+import cmd_logs
 import cmd_pause
 import cmd_restart
 import cmd_start
@@ -101,6 +102,15 @@ def init_telegram(token: str,
         dispatcher,
         "info",
         cmd_info.Info,
+        authorized_users=authorized_users,
+        defaults={
+            "docker_client": docker_client
+        }
+    )
+    register_command(
+        dispatcher,
+        "logs",
+        cmd_logs.Logs,
         authorized_users=authorized_users,
         defaults={
             "docker_client": docker_client
