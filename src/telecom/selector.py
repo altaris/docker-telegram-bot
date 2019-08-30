@@ -26,7 +26,7 @@ class ArgumentSelector:
     """An abstract argument selector.
     """
 
-    COLUMN_COUNT: int = 3
+    COLUMN_COUNT: int = 2
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
         """Implement this.
