@@ -55,19 +55,26 @@ def error_callback(bot: Bot,
     # pylint: disable=unused-argument
     error_name = error.__class__.__name__
     error_message = str(error)
-    logging.error(
-        'User "%s" raised a telegram error %s: %s',
-        update.message.from_user.username,
-        error_name,
-        error_message
-    )
-    bot.send_message(
-        chat_id=update.message.chat_id,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_to_message_id=update.message.message_id,
-        text=f'''❌ *TELEGRAM ERROR* ❌
+    try:
+        logging.error(
+            'User "%s" raised a telegram error %s: %s',
+            update.message.from_user.username,
+            error_name,
+            error_message
+        )
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_to_message_id=update.message.message_id,
+            text=f'''❌ *TELEGRAM ERROR* ❌
 Last command raised a telegram `{error_name}`: {error_message}'''
-    )
+        )
+    else:
+        logging.error(
+            'Telegram error %s: %s',
+            error_name,
+            error_message
+        )
 
 
 def init_docker(server: str) -> docker.DockerClient:
