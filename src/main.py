@@ -69,6 +69,8 @@ def error_callback(bot: Bot,
             text=f'''❌ *TELEGRAM ERROR* ❌
 Last command raised a telegram `{error_name}`: {error_message}'''
         )
+    except:  # pylint: disable=bare-except
+        pass
     else:
         logging.error(
             'Telegram error %s: %s',

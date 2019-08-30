@@ -43,10 +43,14 @@ Displays informations about a container."""
         """
         container = self.get_container(container_name)
         if container is not None:
-            text = f'''*Container `{container.short_id} {container.name}`:*
+            labels_formatted = "\n".join([
+                f'  🏷 `{key}`: `{val}`'
+                for key, val in container.labels
+            ])
+            text = f'''*Container *`{container.short_id} {container.name}`*:*
 ▪️ Image: `{container.image}`
 ▪️ Status: {emoji_of_status(container.status)} ({container.status})
-▪️ Labels: {container.labels}'''
+▪️ Labels: {labels_formatted}'''
             self.reply(text)
 
 
