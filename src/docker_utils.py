@@ -46,8 +46,8 @@ class ContainerSelector(ArgumentSelector):
 class DockerCommand(Command):
     """An abstract command that interacts with the docker daemon.
 
-    A `docker.DockerClient` MUST be given as a default argument for key
-    `docker_client`.
+    A ``docker.DockerClient`` MUST be given as a default argument for key
+    ``docker_client``.
     """
 
     def get_container(self,
@@ -65,7 +65,7 @@ class DockerCommand(Command):
 
     @property
     def docker_client(self) -> DockerClient:
-        """Returns the `docker.DockerClient` of this command.
+        """Returns the ``docker.DockerClient`` of this command.
         """
         client = self._args_dict.get("docker_client", None)
         if not isinstance(client, DockerClient):
@@ -80,11 +80,11 @@ def emoji_of_status(status: str) -> str:
     """Returns the emoji associated to a docker container status.
 
     The emojis are as follows:
-    * `exited`: ⏹,
-    * `paused`: ⏸,
-    * `restarting`: ↩,
-    * `running`: ▶,
-    * otherwise: ❓.
+        * ``exited``: ⏹,
+        * ``paused``: ⏸,
+        * ``restarting``: ↩,
+        * ``running``: ▶,
+        * otherwise: ❓.
     """
     return {
         "exited": "⏹",

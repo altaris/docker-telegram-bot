@@ -17,7 +17,7 @@ from docker_utils import (
 
 
 class InfoSelector(ContainerSelector):
-    """Adds the `Docker daemon` option to `docker_utils.ContainerSelector`.
+    """Adds the ``Docker daemon`` option to ``docker_utils.ContainerSelector``.
     """
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:

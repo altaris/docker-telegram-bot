@@ -83,16 +83,16 @@ class Command:
         There can be multiple functions per hook.
 
         The currently supported hook types are:
-            * `ON_CALLED_FOR_THE_FIRST_TIME`: when the command instance is
+            * ``ON_CALLED_FOR_THE_FIRST_TIME``: when the command instance is
               called for the first time;
-            * `ON_CALLED_NOT_FOR_THE_FIRST_TIME`: when the command instance is
+            * ``ON_CALLED_NOT_FOR_THE_FIRST_TIME``: when the command instance is
                called but not for the first time;
-            * `ON_CREATED`: when the command instance is created;
-            * `ON_FINISHED`: when the command instance finishes execution
+            * ``ON_CREATED``: when the command instance is created;
+            * ``ON_FINISHED``: when the command instance finishes execution
                NORMALLY;
-            * `ON_NOT_ENOUGH_ARGUMENTS`: when the execution of the command is
+            * ``ON_NOT_ENOUGH_ARGUMENTS``: when the execution of the command is
               interrupted because of missing arguments;
-            * `ON_RAISED_EXCEPTION`: when an exception (other than
+            * ``ON_RAISED_EXCEPTION``: when an exception (other than
               ``telecom.command.NotEnoughArguments``) is raised.
         """
         ON_CALLED_FOR_THE_FIRST_TIME = auto()
@@ -261,7 +261,7 @@ class Help(Command):
     """
 
     __HELP__ = """▪️ Usage: `/help COMMAND`
-Displays help message of `COMMAND`."""
+Displays help message of a command."""
 
     HELP_DICT: Dict[str, Optional[str]] = {}
 

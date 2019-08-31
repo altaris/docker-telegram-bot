@@ -10,6 +10,13 @@ check:
 	mypy src/telecom/*.py
 	mypy src/*.py
 
+.ONESHELL:
+doc:
+	. $(VENV_ACTIVATE)
+	pip install -U sphinx sphinxcontrib-napoleon
+	sphinx-build -b html sphinx/ build/
+	-xdg-open build/index.html
+
 docker: docker-run
 
 docker-build: check
