@@ -14,7 +14,7 @@ class Logs(DockerCommand):
     __HELP__ = """▪️ Usage: `/logs CONTAINER`:
 Shows logs of a container."""
 
-    LOG_LINES_TO_FETCH: int = 40
+    LOG_LINES_TO_FETCH: int = 25
 
     def main(self):
         container_name = self.arg(
