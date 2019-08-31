@@ -25,6 +25,9 @@ from telegram import (
     ParseMode,
     Update
 )
+from telegram.constants import (
+    MAX_MESSAGE_LENGTH
+)
 from telegram.ext import (
     CommandHandler,
     Dispatcher
@@ -219,11 +222,15 @@ class Command:
     def reply(self, text: str, **kwargs) -> None:
         """Sends a markdown message through telegram.
         """
+        text_bytes = text.encode("UTF-8")
+        if len(text_bytes) > MAX_MESSAGE_LENGTH:
+            end = b'\n\n...'
+            text_bytes = text_bytes[:MAX_MESSAGE_LENGTH - len(end)] + end
         self._message = self._bot.send_message(
             chat_id=self._message.chat_id,
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=self._message.message_id,
-            text=text,
+            text=text_bytes.decode("UTF-8"),
             **kwargs
         )
 
