@@ -1,33 +1,36 @@
-IMAGE	= docker-telegram-bot
-SUDO   ?= sudo
-
+IMAGE			 = docker-telegram-bot
 LOGGING_LEVEL	?= WARNING
+SECRET_ENV		 = ./secret.env
+SUDO   			?= sudo
+VENV_ACTIVATE	 = ./venv/bin/activate
 
 all: check run
 
 check:
-	@mypy src/*.py
+	mypy src/telecom/*.py
+	mypy src/*.py
 
 docker: docker-run
 
-docker-build:
+docker-build: check
 	$(SUDO) docker build -t $(IMAGE):$$(git rev-parse --abbrev-ref HEAD) .
 
 .ONESHELL:
 docker-run: docker-build
-	@. ./secret.env
-	@$(SUDO) docker run --rm									\
-		--env "LOGGING_LEVEL=$${LOGGING_LEVEL:-WARNING}"		\
-		--env-file secret.env									\
-		--name $(IMAGE)-test									\
-		--volume /var/run/docker.sock:/var/run/docker.sock 		\
+	@echo Running $(IMAGE):$$(git rev-parse --abbrev-ref HEAD)
+	@$(SUDO) docker run --rm								\
+		--env "LOGGING_LEVEL=$(LOGGING_LEVEL)"				\
+		--env-file $(SECRET_ENV)							\
+		--name $(IMAGE)-test								\
+		--volume /var/run/docker.sock:/var/run/docker.sock 	\
 		$(IMAGE):$$(git rev-parse --abbrev-ref HEAD)
 
 .ONESHELL:
 run:
-	@$(SUDO) -- sh -c '											\
-		. ./venv/bin/activate; 									\
-		. ./secret.env; 										\
-		LOGGING_LEVEL=$(LOGGING_LEVEL) python3 src/main.py 		\
-			-a $${TELEGRAM_ADMIN} -t $${TELEGRAM_TOKEN}			\
+	@echo Running python3 src/main.py
+	@$(SUDO) -- sh -c '										\
+		. $(VENV_ACTIVATE); 								\
+		. $(SECRET_ENV); 									\
+		LOGGING_LEVEL=$(LOGGING_LEVEL) python3 src/main.py 	\
+			-a $${TELEGRAM_ADMIN} -t $${TELEGRAM_TOKEN}		\
 	'
