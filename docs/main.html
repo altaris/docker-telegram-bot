@@ -1,0 +1,210 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Main &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Commands" href="commands.html" />
+    <link rel="prev" title="docker-telegram-bot" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="commands.html" title="Commands"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="docker-telegram-bot"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">docker-telegram-bot  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Main</a><ul>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">main</span></code></a></li>
+<li><a class="reference internal" href="#module-docker_utils"><code class="docutils literal notranslate"><span class="pre">docker_utils</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">docker-telegram-bot</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="commands.html"
+                        title="next chapter">Commands</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/main.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="main">
+<h1>Main<a class="headerlink" href="#main" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><code class="docutils literal notranslate"><span class="pre">main</span></code><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-main"></span><p>Main module.</p>
+<dl class="function">
+<dt id="main.error_callback">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">error_callback</code><span class="sig-paren">(</span><em class="sig-param">bot: telegram.bot.Bot</em>, <em class="sig-param">update: telegram.update.Update</em>, <em class="sig-param">error: telegram.error.TelegramError</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/main.html#error_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.error_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom telegram error callback.</p>
+<p>See <a class="reference external" href="https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler">telegram.ext.Dispatcher.add_error_handler</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="main.init_docker">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">init_docker</code><span class="sig-paren">(</span><em class="sig-param">server: str</em><span class="sig-paren">)</span> &#x2192; docker.client.DockerClient<a class="reference internal" href="_modules/main.html#init_docker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.init_docker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inits the docker client.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="main.init_telegram">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">init_telegram</code><span class="sig-paren">(</span><em class="sig-param">token: str, authorized_users: List[int], docker_client: docker.client.DockerClient</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/main.html#init_telegram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.init_telegram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inits the telegram bot.</p>
+<p>Registers commands, polls.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="main.main">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-docker_utils">
+<span id="docker-utils"></span><h2><code class="docutils literal notranslate"><span class="pre">docker_utils</span></code><a class="headerlink" href="#module-docker_utils" title="Permalink to this headline">¶</a></h2>
+<p>Various docker utilities.</p>
+<dl class="class">
+<dt id="docker_utils.ContainerSelector">
+<em class="property">class </em><code class="sig-prename descclassname">docker_utils.</code><code class="sig-name descname">ContainerSelector</code><span class="sig-paren">(</span><em class="sig-param">docker_client: docker.client.DockerClient</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/docker_utils.html#ContainerSelector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#docker_utils.ContainerSelector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="telecom.html#telecom.selector.ArgumentSelector" title="telecom.selector.ArgumentSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.selector.ArgumentSelector</span></code></a></p>
+<p>Selects a container of a docker client.</p>
+<dl class="method">
+<dt id="docker_utils.ContainerSelector.option_list">
+<code class="sig-name descname">option_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Sequence[Union[str, Tuple[str, str]]]<a class="reference internal" href="_modules/docker_utils.html#ContainerSelector.option_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#docker_utils.ContainerSelector.option_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this.</p>
+<p>This method returns the list of options. An option is either a button
+label, or a tuple formed by a button label and a button code. The code
+is returned through the inline query mechanism of telegram if
+available, otherwise, the label is.</p>
+<p>See <a class="reference external" href="https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html">telegram.inlinequery</a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="docker_utils.DockerCommand">
+<em class="property">class </em><code class="sig-prename descclassname">docker_utils.</code><code class="sig-name descname">DockerCommand</code><a class="reference internal" href="_modules/docker_utils.html#DockerCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#docker_utils.DockerCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="telecom.html#telecom.command.Command" title="telecom.command.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.Command</span></code></a></p>
+<p>An abstract command that interacts with the docker daemon.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">docker.DockerClient</span></code> <strong>must</strong> be given as a default value for argument
+<code class="docutils literal notranslate"><span class="pre">docker_client</span></code>. See <a class="reference internal" href="telecom.html#telecom.command.register_command" title="telecom.command.register_command"><code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.register_command()</span></code></a>.</p>
+<dl class="method">
+<dt id="docker_utils.DockerCommand.docker_client">
+<em class="property">property </em><code class="sig-name descname">docker_client</code><a class="headerlink" href="#docker_utils.DockerCommand.docker_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <code class="docutils literal notranslate"><span class="pre">docker.DockerClient</span></code> of this command.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="docker_utils.DockerCommand.get_container">
+<code class="sig-name descname">get_container</code><span class="sig-paren">(</span><em class="sig-param">container_name: str</em><span class="sig-paren">)</span> &#x2192; Optional[docker.models.containers.Container]<a class="reference internal" href="_modules/docker_utils.html#DockerCommand.get_container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#docker_utils.DockerCommand.get_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a container.</p>
+<p>If the container does not exist, return <code class="docutils literal notranslate"><span class="pre">None</span></code> and reports.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="docker_utils.emoji_of_status">
+<code class="sig-prename descclassname">docker_utils.</code><code class="sig-name descname">emoji_of_status</code><span class="sig-paren">(</span><em class="sig-param">status: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/docker_utils.html#emoji_of_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#docker_utils.emoji_of_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the emoji associated to a docker container status.</p>
+<dl class="simple">
+<dt>The emojis are as follows:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">exited</span></code>: ⏹,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paused</span></code>: ⏸,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">restarting</span></code>: ↩,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">running</span></code>: ▶,</p></li>
+<li><p>otherwise: ❓.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="commands.html" title="Commands"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="docker-telegram-bot"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">docker-telegram-bot  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

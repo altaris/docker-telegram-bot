@@ -1,0 +1,115 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>cmd_hi &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cmd_hi</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implentation of command `/hi`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">telegram</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ReplyKeyboardMarkup</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">docker_utils</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">DockerCommand</span>
+<span class="p">)</span>
+
+
+<span class="n">COMMAND_KEYBOARD</span> <span class="o">=</span> <span class="n">ReplyKeyboardMarkup</span><span class="p">([</span>
+    <span class="p">[</span><span class="s2">&quot;/info&quot;</span><span class="p">,</span> <span class="s2">&quot;/logs&quot;</span><span class="p">,</span> <span class="s2">&quot;/help&quot;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">&quot;/start&quot;</span><span class="p">,</span> <span class="s2">&quot;/stop&quot;</span><span class="p">,</span> <span class="s2">&quot;/restart&quot;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">&quot;/pause&quot;</span><span class="p">,</span> <span class="s2">&quot;/unpause&quot;</span><span class="p">],</span>
+    <span class="p">[</span><span class="s2">&quot;/restart_bot&quot;</span><span class="p">]</span>
+<span class="p">])</span>  <span class="c1"># type: ReplyKeyboardMarkup</span>
+
+
+<div class="viewcode-block" id="Hi"><a class="viewcode-back" href="../commands.html#cmd_hi.Hi">[docs]</a><span class="k">class</span> <span class="nc">Hi</span><span class="p">(</span><span class="n">DockerCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of command `/hi`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Hi.main"><a class="viewcode-back" href="../commands.html#cmd_hi.Hi.main">[docs]</a>    <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span>
+            <span class="n">f</span><span class="s1">&#39;Hi </span><span class="si">{self._message.from_user.first_name}</span><span class="s1"> 👋 I am your personal &#39;</span>
+            <span class="n">f</span><span class="s1">&#39;docker assistant. Please choose a command.&#39;</span><span class="p">,</span>
+            <span class="n">reply_markup</span><span class="o">=</span><span class="n">COMMAND_KEYBOARD</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

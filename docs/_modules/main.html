@@ -1,0 +1,321 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>main &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for main</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Main module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Union</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">docker</span>
+<span class="kn">import</span> <span class="nn">docker.errors</span>
+<span class="kn">from</span> <span class="nn">telegram</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Bot</span><span class="p">,</span>
+    <span class="n">ParseMode</span><span class="p">,</span>
+    <span class="n">Update</span>
+<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">telegram.error</span>
+<span class="kn">from</span> <span class="nn">telegram.ext</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">CallbackQueryHandler</span><span class="p">,</span>
+    <span class="n">Updater</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">telecom.command</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">inline_query_handler</span><span class="p">,</span>
+    <span class="n">register_command</span><span class="p">,</span>
+    <span class="n">register_help_command</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">cmd_hi</span>
+<span class="kn">import</span> <span class="nn">cmd_info</span>
+<span class="kn">import</span> <span class="nn">cmd_logs</span>
+<span class="kn">import</span> <span class="nn">cmd_pause</span>
+<span class="kn">import</span> <span class="nn">cmd_restart</span>
+<span class="kn">import</span> <span class="nn">cmd_restart_bot</span>
+<span class="kn">import</span> <span class="nn">cmd_start</span>
+<span class="kn">import</span> <span class="nn">cmd_stop</span>
+<span class="kn">import</span> <span class="nn">cmd_unpause</span>
+
+
+<span class="n">TelegramError</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">telegram</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TelegramError</span><span class="p">,</span>
+                      <span class="n">telegram</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">NetworkError</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="error_callback"><a class="viewcode-back" href="../main.html#main.error_callback">[docs]</a><span class="k">def</span> <span class="nf">error_callback</span><span class="p">(</span><span class="n">bot</span><span class="p">:</span> <span class="n">Bot</span><span class="p">,</span>
+                   <span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span>
+                   <span class="n">error</span><span class="p">:</span> <span class="n">TelegramError</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># pylint: disable=line-too-long</span>
+    <span class="sd">&quot;&quot;&quot;Custom telegram error callback.</span>
+
+<span class="sd">    See `telegram.ext.Dispatcher.add_error_handler`_</span>
+
+<span class="sd">    .. _telegram.ext.Dispatcher.add_error_handler: https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=unused-argument</span>
+    <span class="n">error_name</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">&#39;User &quot;</span><span class="si">%s</span><span class="s1">&quot; raised a telegram error </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">from_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">error_name</span><span class="p">,</span>
+            <span class="n">error_message</span>
+        <span class="p">)</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span>
+            <span class="n">chat_id</span><span class="o">=</span><span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">chat_id</span><span class="p">,</span>
+            <span class="n">parse_mode</span><span class="o">=</span><span class="n">ParseMode</span><span class="o">.</span><span class="n">MARKDOWN</span><span class="p">,</span>
+            <span class="n">reply_to_message_id</span><span class="o">=</span><span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">message_id</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;&#39;&#39;❌ *TELEGRAM ERROR* ❌</span>
+<span class="s1">Last command raised a telegram `</span><span class="si">{error_name}</span><span class="s1">`: </span><span class="si">{error_message}</span><span class="s1">&#39;&#39;&#39;</span>
+        <span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable=bare-except</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">&#39;Telegram error </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">error_name</span><span class="p">,</span>
+            <span class="n">error_message</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="init_docker"><a class="viewcode-back" href="../main.html#main.init_docker">[docs]</a><span class="k">def</span> <span class="nf">init_docker</span><span class="p">(</span><span class="n">server</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">docker</span><span class="o">.</span><span class="n">DockerClient</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Inits the docker client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">docker</span><span class="o">.</span><span class="n">DockerClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">server</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to docker socket </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">client</span></div>
+
+
+<div class="viewcode-block" id="init_telegram"><a class="viewcode-back" href="../main.html#main.init_telegram">[docs]</a><span class="k">def</span> <span class="nf">init_telegram</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">authorized_users</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+                  <span class="n">docker_client</span><span class="p">:</span> <span class="n">docker</span><span class="o">.</span><span class="n">DockerClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Inits the telegram bot.</span>
+
+<span class="sd">    Registers commands, polls.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">updater</span> <span class="o">=</span> <span class="n">Updater</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+    <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">updater</span><span class="o">.</span><span class="n">dispatcher</span>
+
+    <span class="n">dispatcher</span><span class="o">.</span><span class="n">add_error_handler</span><span class="p">(</span><span class="n">error_callback</span><span class="p">)</span>
+    <span class="n">dispatcher</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">CallbackQueryHandler</span><span class="p">(</span><span class="n">inline_query_handler</span><span class="p">))</span>
+
+    <span class="n">register_help_command</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">)</span>
+
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;hi&quot;</span><span class="p">,</span>
+        <span class="n">cmd_hi</span><span class="o">.</span><span class="n">Hi</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+        <span class="n">cmd_info</span><span class="o">.</span><span class="n">Info</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;logs&quot;</span><span class="p">,</span>
+        <span class="n">cmd_logs</span><span class="o">.</span><span class="n">Logs</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;pause&quot;</span><span class="p">,</span>
+        <span class="n">cmd_pause</span><span class="o">.</span><span class="n">Pause</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;restart&quot;</span><span class="p">,</span>
+        <span class="n">cmd_restart</span><span class="o">.</span><span class="n">Restart</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;restart_bot&quot;</span><span class="p">,</span>
+        <span class="n">cmd_restart_bot</span><span class="o">.</span><span class="n">RestartBot</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;telegram_updater&quot;</span><span class="p">:</span> <span class="n">updater</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;start&quot;</span><span class="p">,</span>
+        <span class="n">cmd_start</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;stop&quot;</span><span class="p">,</span>
+        <span class="n">cmd_stop</span><span class="o">.</span><span class="n">Stop</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">register_command</span><span class="p">(</span>
+        <span class="n">dispatcher</span><span class="p">,</span>
+        <span class="s2">&quot;unpause&quot;</span><span class="p">,</span>
+        <span class="n">cmd_unpause</span><span class="o">.</span><span class="n">Unpause</span><span class="p">,</span>
+        <span class="n">authorized_users</span><span class="o">=</span><span class="n">authorized_users</span><span class="p">,</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;docker_client&quot;</span><span class="p">:</span> <span class="n">docker_client</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">updater</span><span class="o">.</span><span class="n">start_polling</span><span class="p">()</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Started bot </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">updater</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">updater</span><span class="o">.</span><span class="n">idle</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../main.html#main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Main function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="s2">&quot;--authorized-user&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;authorized_users&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Sets an authorized user; reuse this option to add more &quot;</span>
+             <span class="s2">&quot;authorized users&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;USERID&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--server&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;unix:///var/run/docker.sock&quot;</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;server&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;URL to the docker server&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;URL&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;--token&quot;</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;token&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Telegram bot token&quot;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;TOKEN&quot;</span><span class="p">)</span>
+    <span class="n">arguments</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">authorized_users</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No authorized user set! Use the -a flag&quot;</span><span class="p">)</span>
+
+    <span class="n">docker_client</span> <span class="o">=</span> <span class="n">init_docker</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+    <span class="n">init_telegram</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="n">arguments</span><span class="o">.</span><span class="n">authorized_users</span><span class="p">,</span> <span class="n">docker_client</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+        <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> [</span><span class="si">%(levelname)s</span><span class="s1">] </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+            <span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+            <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+            <span class="s2">&quot;INFO&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="s2">&quot;WARNING&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
+        <span class="p">}[</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LOGGING_LEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">)])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">main</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

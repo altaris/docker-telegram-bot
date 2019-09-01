@@ -29,6 +29,7 @@ author = 'Cédric HT'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode'
 ]
@@ -46,7 +47,6 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-
 html_theme = 'bizstyle'
 
 # Add any paths that contain custom static files (such as style sheets) here,

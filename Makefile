@@ -3,6 +3,7 @@ LOGGING_LEVEL	?= WARNING
 SECRET_ENV		 = ./secret.env
 SUDO   			?= sudo
 VENV_ACTIVATE	 = ./venv/bin/activate
+DOCS_DIR		 = docs
 
 all: check run
 
@@ -11,14 +12,13 @@ check:
 	mypy src/*.py
 
 clean:
-	rm -rf build/
+	rm -rf $(DOCS_DIR)/
 
 .ONESHELL:
 doc:
 	. $(VENV_ACTIVATE)
 	pip install -U sphinx sphinxcontrib-napoleon
-	sphinx-build -b html sphinx/ build/
-	-xdg-open build/index.html
+	sphinx-build -b html sphinx/ $(DOCS_DIR)/
 
 docker: docker-run
 

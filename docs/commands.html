@@ -1,0 +1,354 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Commands &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Telecom" href="telecom.html" />
+    <link rel="prev" title="Main" href="main.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="telecom.html" title="Telecom"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="main.html" title="Main"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">docker-telegram-bot  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Commands</a><ul>
+<li><a class="reference internal" href="#module-cmd_hi"><code class="docutils literal notranslate"><span class="pre">/hi</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_info"><code class="docutils literal notranslate"><span class="pre">/info</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_logs"><code class="docutils literal notranslate"><span class="pre">/logs</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_pause"><code class="docutils literal notranslate"><span class="pre">/pause</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_restart_bot"><code class="docutils literal notranslate"><span class="pre">/restart_bot</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_restart"><code class="docutils literal notranslate"><span class="pre">/restart</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_start"><code class="docutils literal notranslate"><span class="pre">/start</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_stop"><code class="docutils literal notranslate"><span class="pre">/stop</span></code></a></li>
+<li><a class="reference internal" href="#module-cmd_unpause"><code class="docutils literal notranslate"><span class="pre">/unpause</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="main.html"
+                        title="previous chapter">Main</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="telecom.html"
+                        title="next chapter">Telecom</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/commands.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cmd_hi">
+<span id="hi"></span><h2><code class="docutils literal notranslate"><span class="pre">/hi</span></code><a class="headerlink" href="#module-cmd_hi" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/hi</cite>.</p>
+<dl class="class">
+<dt id="cmd_hi.Hi">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_hi.</code><code class="sig-name descname">Hi</code><a class="reference internal" href="_modules/cmd_hi.html#Hi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_hi.Hi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/hi</cite>.</p>
+<dl class="method">
+<dt id="cmd_hi.Hi.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmd_hi.html#Hi.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_hi.Hi.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_info">
+<span id="info"></span><h2><code class="docutils literal notranslate"><span class="pre">/info</span></code><a class="headerlink" href="#module-cmd_info" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/info</cite>.</p>
+<dl class="class">
+<dt id="cmd_info.Info">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_info.</code><code class="sig-name descname">Info</code><a class="reference internal" href="_modules/cmd_info.html#Info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.Info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implentation of command <cite>/info</cite>.</p>
+<dl class="method">
+<dt id="cmd_info.Info.info_container">
+<code class="sig-name descname">info_container</code><span class="sig-paren">(</span><em class="sig-param">container_name: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmd_info.html#Info.info_container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.Info.info_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implentation of command <cite>/info</cite>.</p>
+<p>Retrieves and sends general informations about a container.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cmd_info.Info.info_docker">
+<code class="sig-name descname">info_docker</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmd_info.html#Info.info_docker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.Info.info_docker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implentation of command <cite>/info</cite>.</p>
+<p>Retrieves and sends general informations about the docker daemon.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cmd_info.Info.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmd_info.html#Info.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.Info.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cmd_info.InfoSelector">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_info.</code><code class="sig-name descname">InfoSelector</code><span class="sig-paren">(</span><em class="sig-param">docker_client: docker.client.DockerClient</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_info.html#InfoSelector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.InfoSelector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.ContainerSelector" title="docker_utils.ContainerSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.ContainerSelector</span></code></a></p>
+<p>Adds the <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">daemon</span></code> option to <code class="docutils literal notranslate"><span class="pre">docker_utils.ContainerSelector</span></code>.</p>
+<dl class="method">
+<dt id="cmd_info.InfoSelector.option_list">
+<code class="sig-name descname">option_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Sequence[Union[str, Tuple[str, str]]]<a class="reference internal" href="_modules/cmd_info.html#InfoSelector.option_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_info.InfoSelector.option_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this.</p>
+<p>This method returns the list of options. An option is either a button
+label, or a tuple formed by a button label and a button code. The code
+is returned through the inline query mechanism of telegram if
+available, otherwise, the label is.</p>
+<p>See <a class="reference external" href="https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html">telegram.inlinequery</a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_logs">
+<span id="logs"></span><h2><code class="docutils literal notranslate"><span class="pre">/logs</span></code><a class="headerlink" href="#module-cmd_logs" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/logs</cite>.</p>
+<dl class="class">
+<dt id="cmd_logs.Logs">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_logs.</code><code class="sig-name descname">Logs</code><a class="reference internal" href="_modules/cmd_logs.html#Logs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_logs.Logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/start</cite>.</p>
+<dl class="method">
+<dt id="cmd_logs.Logs.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_logs.html#Logs.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_logs.Logs.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_pause">
+<span id="pause"></span><h2><code class="docutils literal notranslate"><span class="pre">/pause</span></code><a class="headerlink" href="#module-cmd_pause" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/pause</cite>.</p>
+<dl class="class">
+<dt id="cmd_pause.Pause">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_pause.</code><code class="sig-name descname">Pause</code><a class="reference internal" href="_modules/cmd_pause.html#Pause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_pause.Pause" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/pause</cite>.</p>
+<dl class="method">
+<dt id="cmd_pause.Pause.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_pause.html#Pause.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_pause.Pause.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_restart_bot">
+<span id="restart-bot"></span><h2><code class="docutils literal notranslate"><span class="pre">/restart_bot</span></code><a class="headerlink" href="#module-cmd_restart_bot" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/restart_bot</cite>.</p>
+<dl class="class">
+<dt id="cmd_restart_bot.RestartBot">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_restart_bot.</code><code class="sig-name descname">RestartBot</code><a class="reference internal" href="_modules/cmd_restart_bot.html#RestartBot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_restart_bot.RestartBot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="telecom.html#telecom.command.Command" title="telecom.command.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.Command</span></code></a></p>
+<p>Implementation of command <cite>/restart_bot</cite>.</p>
+<dl class="method">
+<dt id="cmd_restart_bot.RestartBot.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_restart_bot.html#RestartBot.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_restart_bot.RestartBot.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cmd_restart_bot.RestartBot.updater">
+<em class="property">property </em><code class="sig-name descname">updater</code><a class="headerlink" href="#cmd_restart_bot.RestartBot.updater" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <code class="docutils literal notranslate"><span class="pre">telegram.ext.updater</span></code> of this command.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_restart">
+<span id="restart"></span><h2><code class="docutils literal notranslate"><span class="pre">/restart</span></code><a class="headerlink" href="#module-cmd_restart" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/restart</cite>.</p>
+<dl class="class">
+<dt id="cmd_restart.Restart">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_restart.</code><code class="sig-name descname">Restart</code><a class="reference internal" href="_modules/cmd_restart.html#Restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_restart.Restart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/restart</cite>.</p>
+<dl class="method">
+<dt id="cmd_restart.Restart.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_restart.html#Restart.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_restart.Restart.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_start">
+<span id="start"></span><h2><code class="docutils literal notranslate"><span class="pre">/start</span></code><a class="headerlink" href="#module-cmd_start" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/start</cite>.</p>
+<dl class="class">
+<dt id="cmd_start.Start">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_start.</code><code class="sig-name descname">Start</code><a class="reference internal" href="_modules/cmd_start.html#Start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_start.Start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/start</cite>.</p>
+<dl class="method">
+<dt id="cmd_start.Start.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_start.html#Start.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_start.Start.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_stop">
+<span id="stop"></span><h2><code class="docutils literal notranslate"><span class="pre">/stop</span></code><a class="headerlink" href="#module-cmd_stop" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/stop</cite>.</p>
+<dl class="class">
+<dt id="cmd_stop.Stop">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_stop.</code><code class="sig-name descname">Stop</code><a class="reference internal" href="_modules/cmd_stop.html#Stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_stop.Stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/stop</cite>.</p>
+<dl class="method">
+<dt id="cmd_stop.Stop.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_stop.html#Stop.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_stop.Stop.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cmd_unpause">
+<span id="unpause"></span><h2><code class="docutils literal notranslate"><span class="pre">/unpause</span></code><a class="headerlink" href="#module-cmd_unpause" title="Permalink to this headline">¶</a></h2>
+<p>Implentation of command <cite>/unpause</cite>.</p>
+<dl class="class">
+<dt id="cmd_unpause.Unpause">
+<em class="property">class </em><code class="sig-prename descclassname">cmd_unpause.</code><code class="sig-name descname">Unpause</code><a class="reference internal" href="_modules/cmd_unpause.html#Unpause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_unpause.Unpause" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="main.html#docker_utils.DockerCommand" title="docker_utils.DockerCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">docker_utils.DockerCommand</span></code></a></p>
+<p>Implementation of command <cite>/unpause</cite>.</p>
+<dl class="method">
+<dt id="cmd_unpause.Unpause.main">
+<code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmd_unpause.html#Unpause.main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmd_unpause.Unpause.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main code of the command.</p>
+<p>This function may be executed multiple times even if the telegram user
+invokes it once. This is due to the execution flow breaking
+<code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArgument</span></code> that is raised when
+missing arguments are requested.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="telecom.html" title="Telecom"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="main.html" title="Main"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">docker-telegram-bot  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

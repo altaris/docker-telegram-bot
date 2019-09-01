@@ -1,0 +1,185 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>cmd_info &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cmd_info</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implentation of command `/info`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">docker_utils</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ContainerSelector</span><span class="p">,</span>
+    <span class="n">DockerCommand</span><span class="p">,</span>
+    <span class="n">emoji_of_status</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="InfoSelector"><a class="viewcode-back" href="../commands.html#cmd_info.InfoSelector">[docs]</a><span class="k">class</span> <span class="nc">InfoSelector</span><span class="p">(</span><span class="n">ContainerSelector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the ``Docker daemon`` option to ``docker_utils.ContainerSelector``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InfoSelector.option_list"><a class="viewcode-back" href="../commands.html#cmd_info.InfoSelector.option_list">[docs]</a>    <span class="k">def</span> <span class="nf">option_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;Docker daemon 🐳&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">]</span>  <span class="c1"># type: List[Union[str, Tuple[str, str]]]</span>
+        <span class="k">return</span> <span class="n">item</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">ContainerSelector</span><span class="o">.</span><span class="n">option_list</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Info"><a class="viewcode-back" href="../commands.html#cmd_info.Info">[docs]</a><span class="k">class</span> <span class="nc">Info</span><span class="p">(</span><span class="n">DockerCommand</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implentation of command `/info`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__HELP__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;▪️ Usage: `/info`:</span>
+<span class="s2">Displays informations about the docker &quot;daemon.</span>
+<span class="s2">▪️ Usage: `/info CONTAINER`:</span>
+<span class="s2">Displays informations about a container.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Info.info_container"><a class="viewcode-back" href="../commands.html#cmd_info.Info.info_container">[docs]</a>    <span class="k">def</span> <span class="nf">info_container</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Implentation of command `/info`.</span>
+
+<span class="sd">        Retrieves and sends general informations about a container.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_container</span><span class="p">(</span><span class="n">container_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">container</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels_formatted</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="n">f</span><span class="s1">&#39;🏷 `</span><span class="si">{key}</span><span class="s1">`: `{container.labels.get(key, &quot; &quot;)}`&#39;</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">container</span><span class="o">.</span><span class="n">labels</span>
+            <span class="p">])</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;&#39;&#39;*Container *`</span><span class="si">{container.short_id}</span><span class="s1"> </span><span class="si">{container.name}</span><span class="s1">`*:*</span>
+<span class="s1">▪️ Image: `</span><span class="si">{container.image}</span><span class="s1">`</span>
+<span class="s1">▪️ Status: {emoji_of_status(container.status)} (</span><span class="si">{container.status}</span><span class="s1">)</span>
+<span class="s1">▪️ Labels: </span><span class="si">{labels_formatted}</span><span class="s1">&#39;&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Info.info_docker"><a class="viewcode-back" href="../commands.html#cmd_info.Info.info_docker">[docs]</a>    <span class="k">def</span> <span class="nf">info_docker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Implentation of command `/info`.</span>
+
+<span class="sd">        Retrieves and sends general informations about the docker daemon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+        <span class="n">running_containers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;running&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">running_container_list</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">f</span><span class="s1">&#39;     - `</span><span class="si">{c.name}</span><span class="s1">`&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">running_containers</span>
+        <span class="p">])</span>
+        <span class="n">restarting_containers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;restarting&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">restarting_container_list</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">f</span><span class="s1">&#39;     - `</span><span class="si">{c.name}</span><span class="s1">`&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">restarting_containers</span>
+        <span class="p">])</span>
+        <span class="n">paused_containers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;paused&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">paused_container_list</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">f</span><span class="s1">&#39;     - `</span><span class="si">{c.name}</span><span class="s1">`&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">paused_containers</span>
+        <span class="p">])</span>
+        <span class="n">stopped_containers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+            <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;exited&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">stopped_container_list</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">f</span><span class="s1">&#39;     - `</span><span class="si">{c.name}</span><span class="s1">`&#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">stopped_containers</span>
+        <span class="p">])</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;&#39;&#39;*Docker status* 🐳⚙️</span>
+<span class="s1">▪️ Docker version: </span><span class="si">{info[&quot;ServerVersion&quot;]}</span><span class="s1"></span>
+<span class="s1">▪️ Memory: {int(info[&quot;MemTotal&quot;])/1000000000} GiB</span>
+<span class="s1">▪️ Running containers: {len(running_containers)}</span><span class="si">{running_container_list}</span><span class="s1"></span>
+<span class="s1">▪️ Restarting containers: {len(restarting_containers)}</span><span class="si">{restarting_container_list}</span><span class="s1"></span>
+<span class="s1">▪️ Paused containers: {len(paused_containers)}</span><span class="si">{paused_container_list}</span><span class="s1"></span>
+<span class="s1">▪️ Stopped containers: {len(stopped_containers)}</span><span class="si">{stopped_container_list}</span><span class="s1">&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Info.main"><a class="viewcode-back" href="../commands.html#cmd_info.Info.main">[docs]</a>    <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">InfoSelector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info_docker</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">info_container</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

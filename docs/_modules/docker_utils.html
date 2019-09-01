@@ -1,0 +1,178 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>docker_utils &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for docker_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Various docker utilities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">docker</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">DockerClient</span>
+<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">docker.errors</span>
+<span class="kn">from</span> <span class="nn">docker.models.containers</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Container</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">telecom.command</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Command</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">telecom.selector</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ArgumentSelector</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ContainerSelector"><a class="viewcode-back" href="../main.html#docker_utils.ContainerSelector">[docs]</a><span class="k">class</span> <span class="nc">ContainerSelector</span><span class="p">(</span><span class="n">ArgumentSelector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Selects a container of a docker client.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">docker_client</span><span class="p">:</span> <span class="n">DockerClient</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_docker_client</span> <span class="o">=</span> <span class="n">docker_client</span>
+
+<div class="viewcode-block" id="ContainerSelector.option_list"><a class="viewcode-back" href="../main.html#docker_utils.ContainerSelector.option_list">[docs]</a>    <span class="k">def</span> <span class="nf">option_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="n">f</span><span class="s1">&#39;</span><span class="si">{container.name}</span><span class="s1"> {emoji_of_status(container.status)}&#39;</span><span class="p">,</span>
+                <span class="n">container</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">container</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">]</span></div></div>
+
+
+<span class="c1"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="DockerCommand"><a class="viewcode-back" href="../main.html#docker_utils.DockerCommand">[docs]</a><span class="k">class</span> <span class="nc">DockerCommand</span><span class="p">(</span><span class="n">Command</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An abstract command that interacts with the docker daemon.</span>
+
+<span class="sd">    A ``docker.DockerClient`` **must** be given as a default value for argument</span>
+<span class="sd">    ``docker_client``. See :py:meth:`telecom.command.register_command`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DockerCommand.get_container"><a class="viewcode-back" href="../main.html#docker_utils.DockerCommand.get_container">[docs]</a>    <span class="k">def</span> <span class="nf">get_container</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">container_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Container</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Gets a container.</span>
+
+<span class="sd">        If the container does not exist, return ``None`` and reports.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: Optional[Container]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_client</span><span class="o">.</span><span class="n">containers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">container_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">docker</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NotFound</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reply_error</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Container </span><span class="se">\&quot;</span><span class="si">{container_name}</span><span class="se">\&quot;</span><span class="s1"> not found.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">container</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">docker_client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DockerClient</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the ``docker.DockerClient`` of this command.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;docker_client&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">DockerClient</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;A DockerCommand must have a DockerClient as default value &#39;</span>
+                <span class="s1">&#39;for key &quot;docker_client&quot;&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">client</span></div>
+
+
+<div class="viewcode-block" id="emoji_of_status"><a class="viewcode-back" href="../main.html#docker_utils.emoji_of_status">[docs]</a><span class="k">def</span> <span class="nf">emoji_of_status</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Returns the emoji associated to a docker container status.</span>
+
+<span class="sd">    The emojis are as follows:</span>
+<span class="sd">        * ``exited``: ⏹,</span>
+<span class="sd">        * ``paused``: ⏸,</span>
+<span class="sd">        * ``restarting``: ↩,</span>
+<span class="sd">        * ``running``: ▶,</span>
+<span class="sd">        * otherwise: ❓.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;exited&quot;</span><span class="p">:</span> <span class="s2">&quot;⏹&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;paused&quot;</span><span class="p">:</span> <span class="s2">&quot;⏸&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;restarting&quot;</span><span class="p">:</span> <span class="s2">&quot;↩&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;running&quot;</span><span class="p">:</span> <span class="s2">&quot;▶&quot;</span>
+    <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="s2">&quot;❓&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

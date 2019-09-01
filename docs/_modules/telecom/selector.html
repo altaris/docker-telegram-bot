@@ -1,0 +1,163 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>telecom.selector &#8212; docker-telegram-bot  documentation</title>
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for telecom.selector</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Defines selectors.</span>
+
+<span class="sd">A selector is a class that derives from</span>
+<span class="sd">:py:class:`telecom.selector.ArgumentSelector` and that implements</span>
+<span class="sd">:py:meth:`telecom.selector.ArgumentSelector.option_list`. Abstractly, it</span>
+<span class="sd">represents an inline keyboard to be showed to the user when an argument (having</span>
+<span class="sd">this selector) is needed.</span>
+
+<span class="sd">See :py:meth:`telecom.command.Command.arg`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">telegram</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">InlineKeyboardButton</span><span class="p">,</span>
+    <span class="n">InlineKeyboardMarkup</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ArgumentSelector"><a class="viewcode-back" href="../../telecom.html#telecom.selector.ArgumentSelector">[docs]</a><span class="k">class</span> <span class="nc">ArgumentSelector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;An abstract argument selector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">COLUMN_COUNT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="sd">&quot;&quot;&quot;Column count of the telegram inline keyboard.</span>
+
+<span class="sd">    See implementation of</span>
+<span class="sd">    :py:meth:`telecom.selector.ArgumentSelector.option_inline_keyboard`&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArgumentSelector.option_list"><a class="viewcode-back" href="../../telecom.html#telecom.selector.ArgumentSelector.option_list">[docs]</a>    <span class="k">def</span> <span class="nf">option_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Implement this.</span>
+
+<span class="sd">        This method returns the list of options. An option is either a button</span>
+<span class="sd">        label, or a tuple formed by a button label and a button code. The code</span>
+<span class="sd">        is returned through the inline query mechanism of telegram if</span>
+<span class="sd">        available, otherwise, the label is.</span>
+
+<span class="sd">        See `telegram.inlinequery`_.</span>
+
+<span class="sd">        .. _telegram.inlinequery: https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ArgumentSelector.option_inline_keyboard"><a class="viewcode-back" href="../../telecom.html#telecom.selector.ArgumentSelector.option_inline_keyboard">[docs]</a>    <span class="k">def</span> <span class="nf">option_inline_keyboard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                               <span class="n">callback_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineKeyboardMarkup</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Creates a inline keyboard out of the options provided by this</span>
+<span class="sd">        selector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">button_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># type: List[InlineKeyboardButton]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">option_list</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">text</span><span class="p">,</span> <span class="n">code</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> <span class="n">item</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">text</span><span class="p">,</span> <span class="n">code</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="n">button_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">InlineKeyboardButton</span><span class="p">(</span>
+                <span class="n">text</span><span class="p">,</span>
+                <span class="n">callback_data</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{callback_prefix}</span><span class="s1">:</span><span class="si">{code}</span><span class="s1">&#39;</span>
+            <span class="p">)]</span>
+        <span class="n">button_layout</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># type: List[List[InlineKeyboardButton]]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">button</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">button_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="n">ArgumentSelector</span><span class="o">.</span><span class="n">COLUMN_COUNT</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">button_layout</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">button</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">button_layout</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">button</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">InlineKeyboardMarkup</span><span class="p">(</span><span class="n">button_layout</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="YesNoSelector"><a class="viewcode-back" href="../../telecom.html#telecom.selector.YesNoSelector">[docs]</a><span class="k">class</span> <span class="nc">YesNoSelector</span><span class="p">(</span><span class="n">ArgumentSelector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A simple Yes/No selector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="YesNoSelector.option_list"><a class="viewcode-back" href="../../telecom.html#telecom.selector.YesNoSelector.option_list">[docs]</a>    <span class="k">def</span> <span class="nf">option_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]:</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="s2">&quot;Yes ✅&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;No ❌&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">docker-telegram-bot  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Cédric HT.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
