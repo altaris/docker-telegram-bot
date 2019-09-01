@@ -78,7 +78,6 @@
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
-    <span class="n">List</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Sequence</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
@@ -87,7 +86,6 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">telegram</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">Bot</span><span class="p">,</span>
     <span class="n">Message</span><span class="p">,</span>
     <span class="n">ParseMode</span><span class="p">,</span>
     <span class="n">Update</span>
@@ -96,6 +94,7 @@
     <span class="n">MAX_MESSAGE_LENGTH</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">telegram.ext</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">CallbackContext</span><span class="p">,</span>
     <span class="n">CommandHandler</span><span class="p">,</span>
     <span class="n">Dispatcher</span>
 <span class="p">)</span>
@@ -106,13 +105,6 @@
 <span class="kn">from</span> <span class="nn">telecom.selector</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">ArgumentSelector</span>
 <span class="p">)</span>
-
-
-<span class="n">COMMANDS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="s1">&#39;Command&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="sd">&quot;&quot;&quot;Dictionary that maps a command name to the corresponding class.</span>
-
-<span class="sd">See :py:meth:`telecom.command.register_command`.</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="NotEnoughArguments"><a class="viewcode-back" href="../../telecom.html#telecom.command.NotEnoughArguments">[docs]</a><span class="k">class</span> <span class="nc">NotEnoughArguments</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -160,6 +152,12 @@
         <span class="n">ON_RAISED_EXCEPTION</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
 
 
+    <span class="n">COMMANDS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="s1">&#39;Command&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="sd">&quot;&quot;&quot;Dictionary that maps a command name to the corresponding class.</span>
+
+<span class="sd">    See :py:meth:`telecom.command.register_command`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">PENDING_COMMANDS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;Command&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="sd">&quot;&quot;&quot;Global dict of pending commands.&quot;&quot;&quot;</span>
 
@@ -176,8 +174,8 @@
     <span class="n">_args_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="sd">&quot;&quot;&quot;Argument dict.&quot;&quot;&quot;</span>
 
-    <span class="n">_bot</span><span class="p">:</span> <span class="n">Bot</span>
-    <span class="sd">&quot;&quot;&quot;Telegram bot that called this command.&quot;&quot;&quot;</span>
+    <span class="n">_context</span><span class="p">:</span> <span class="n">CallbackContext</span>
+    <span class="sd">&quot;&quot;&quot;Telegram callback context.&quot;&quot;&quot;</span>
 
     <span class="n">_first_call</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="sd">&quot;&quot;&quot;Wether this is the first time this command instance is called.&quot;&quot;&quot;</span>
@@ -192,9 +190,8 @@
 <span class="sd">    command is not pending.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Command.__call__"><a class="viewcode-back" href="../../telecom.html#telecom.command.Command.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">bot</span><span class="p">:</span> <span class="n">Bot</span><span class="p">,</span>
                  <span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span>
-                 <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                 <span class="n">context</span><span class="p">:</span> <span class="n">CallbackContext</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The command is called through this method by the telegram dispatcher.</span>
 
@@ -202,7 +199,7 @@
 <span class="sd">        :py:class:`telecom.command.NotEnoughArguments` exceptions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_call</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_bot</span> <span class="o">=</span> <span class="n">bot</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_first_call</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_message</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">call_hooks</span><span class="p">(</span><span class="n">Command</span><span class="o">.</span><span class="n">HookType</span><span class="o">.</span><span class="n">ON_CALLED_FOR_THE_FIRST_TIME</span><span class="p">)</span>
@@ -210,9 +207,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">call_hooks</span><span class="p">(</span><span class="n">Command</span><span class="o">.</span><span class="n">HookType</span><span class="o">.</span><span class="n">ON_CALLED_NOT_FOR_THE_FIRST_TIME</span><span class="p">)</span>
 
         <span class="n">kwargs_dict</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
-        <span class="n">kwargs_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span> <span class="n">val</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-        <span class="p">})</span>
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">kwargs_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span> <span class="n">val</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="p">})</span>
         <span class="n">kwargs_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_args_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_args_dict</span> <span class="o">=</span> <span class="n">kwargs_dict</span>
 
@@ -273,8 +271,10 @@
 <div class="viewcode-block" id="Command.delete_reply"><a class="viewcode-back" href="../../telecom.html#telecom.command.Command.delete_reply">[docs]</a>    <span class="k">def</span> <span class="nf">delete_reply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Deletes the last message sent by this command.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">chat_id</span><span class="p">,</span>
-                                 <span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">message_id</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">chat_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">message_id</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Command.edit_reply"><a class="viewcode-back" href="../../telecom.html#telecom.command.Command.edit_reply">[docs]</a>    <span class="k">def</span> <span class="nf">edit_reply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Edits the last message sent by this command.</span>
@@ -302,7 +302,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_MESSAGE_LENGTH</span><span class="p">:</span>
             <span class="n">end</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">...&#39;</span>
             <span class="n">text_bytes</span> <span class="o">=</span> <span class="n">text_bytes</span><span class="p">[:</span><span class="n">MAX_MESSAGE_LENGTH</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">end</span><span class="p">)]</span> <span class="o">+</span> <span class="n">end</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span>
             <span class="n">chat_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">chat_id</span><span class="p">,</span>
             <span class="n">parse_mode</span><span class="o">=</span><span class="n">ParseMode</span><span class="o">.</span><span class="n">MARKDOWN</span><span class="p">,</span>
             <span class="n">reply_to_message_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="o">.</span><span class="n">message_id</span><span class="p">,</span>
@@ -381,7 +381,7 @@
         <span class="nb">list</span><span class="p">(</span><span class="n">Command</span><span class="o">.</span><span class="n">GLOBAL_HOOKS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">hook_type</span><span class="p">,</span> <span class="p">[]))</span></div>
 
 
-<div class="viewcode-block" id="inline_query_handler"><a class="viewcode-back" href="../../telecom.html#telecom.command.inline_query_handler">[docs]</a><span class="k">def</span> <span class="nf">inline_query_handler</span><span class="p">(</span><span class="n">bot</span><span class="p">:</span> <span class="n">Bot</span><span class="p">,</span> <span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="inline_query_handler"><a class="viewcode-back" href="../../telecom.html#telecom.command.inline_query_handler">[docs]</a><span class="k">def</span> <span class="nf">inline_query_handler</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">CallbackContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Global inline query handler.</span>
 
 <span class="sd">    Register it to a telegram dispatcher as such::</span>
@@ -397,7 +397,7 @@
     <span class="n">arg_value</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">call_idx</span> <span class="ow">in</span> <span class="n">Command</span><span class="o">.</span><span class="n">PENDING_COMMANDS</span><span class="p">:</span>
         <span class="n">Command</span><span class="o">.</span><span class="n">PENDING_COMMANDS</span><span class="p">[</span><span class="n">call_idx</span><span class="p">]</span><span class="o">.</span><span class="n">set_arg</span><span class="p">(</span><span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_value</span><span class="p">)</span>
-        <span class="n">Command</span><span class="o">.</span><span class="n">PENDING_COMMANDS</span><span class="p">[</span><span class="n">call_idx</span><span class="p">](</span><span class="n">bot</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">Command</span><span class="o">.</span><span class="n">PENDING_COMMANDS</span><span class="p">[</span><span class="n">call_idx</span><span class="p">](</span><span class="n">update</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Bad call index </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">call_idx</span><span class="p">)</span></div>
 
@@ -427,7 +427,7 @@
 
     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Registering command </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">command_name</span><span class="p">)</span>
 
-    <span class="n">COMMANDS</span><span class="p">[</span><span class="n">command_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_class</span>
+    <span class="n">Command</span><span class="o">.</span><span class="n">COMMANDS</span><span class="p">[</span><span class="n">command_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_class</span>
     <span class="n">Help</span><span class="o">.</span><span class="n">HELP_DICT</span><span class="p">[</span><span class="n">command_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_class</span><span class="o">.</span><span class="n">__HELP__</span>
 
     <span class="n">authorized_users</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;authorized_users&quot;</span><span class="p">,</span> <span class="p">[])</span>

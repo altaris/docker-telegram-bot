@@ -89,13 +89,6 @@ telegram. In Python, it is represented by a subclass of
 <a class="reference internal" href="#telecom.command.Command.main" title="telecom.command.Command.main"><code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.Command.main()</span></code></a>.</p>
 <p>See <code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.Command</span></code> for more documentation, and
 <a class="reference internal" href="commands.html#cmd_hi.Hi" title="cmd_hi.Hi"><code class="xref py py-class docutils literal notranslate"><span class="pre">cmd_hi.Hi</span></code></a> for an example.</p>
-<dl class="data">
-<dt id="telecom.command.COMMANDS">
-<code class="sig-prename descclassname">telecom.command.</code><code class="sig-name descname">COMMANDS</code><em class="property"> = {}</em><a class="headerlink" href="#telecom.command.COMMANDS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary that maps a command name to the corresponding class.</p>
-<p>See <a class="reference internal" href="#telecom.command.register_command" title="telecom.command.register_command"><code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.register_command()</span></code></a>.</p>
-</dd></dl>
-
 <dl class="class">
 <dt id="telecom.command.Command">
 <em class="property">class </em><code class="sig-prename descclassname">telecom.command.</code><code class="sig-name descname">Command</code><a class="reference internal" href="_modules/telecom/command.html#Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#telecom.command.Command" title="Permalink to this definition">¶</a></dt>
@@ -105,6 +98,13 @@ telegram.</p>
 <p>Simply derive this class and implement
 <a class="reference internal" href="#telecom.command.Command.main" title="telecom.command.Command.main"><code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.Command.main()</span></code></a>. A help message can be stored in
 class static member <code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.Command.__HELP__()</span></code>.</p>
+<dl class="attribute">
+<dt id="telecom.command.Command.COMMANDS">
+<code class="sig-name descname">COMMANDS</code><em class="property"> = {}</em><a class="headerlink" href="#telecom.command.Command.COMMANDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary that maps a command name to the corresponding class.</p>
+<p>See <a class="reference internal" href="#telecom.command.register_command" title="telecom.command.register_command"><code class="xref py py-meth docutils literal notranslate"><span class="pre">telecom.command.register_command()</span></code></a>.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="telecom.command.Command.GLOBAL_HOOKS">
 <code class="sig-name descname">GLOBAL_HOOKS</code><em class="property"> = {}</em><a class="headerlink" href="#telecom.command.Command.GLOBAL_HOOKS" title="Permalink to this definition">¶</a></dt>
@@ -159,7 +159,7 @@ to <a class="reference internal" href="#telecom.command.Command.PENDING_COMMANDS
 
 <dl class="method">
 <dt id="telecom.command.Command.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">bot: telegram.bot.Bot, update: telegram.update.Update, args: List[str], **kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/telecom/command.html#Command.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#telecom.command.Command.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">update: telegram.update.Update</em>, <em class="sig-param">context: telegram.ext.callbackcontext.CallbackContext</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/telecom/command.html#Command.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#telecom.command.Command.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>The command is called through this method by the telegram dispatcher.</p>
 <p>Do not reimplement this. It calls hooks and catches
 <a class="reference internal" href="#telecom.command.NotEnoughArguments" title="telecom.command.NotEnoughArguments"><code class="xref py py-class docutils literal notranslate"><span class="pre">telecom.command.NotEnoughArguments</span></code></a> exceptions.</p>
@@ -172,9 +172,9 @@ to <a class="reference internal" href="#telecom.command.Command.PENDING_COMMANDS
 </dd></dl>
 
 <dl class="attribute">
-<dt id="telecom.command.Command._bot">
-<code class="sig-name descname">_bot</code><em class="property"> = None</em><a class="headerlink" href="#telecom.command.Command._bot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Telegram bot that called this command.</p>
+<dt id="telecom.command.Command._context">
+<code class="sig-name descname">_context</code><em class="property"> = None</em><a class="headerlink" href="#telecom.command.Command._context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Telegram callback context.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -326,7 +326,7 @@ practice, it just interrupts the execution flow.</p>
 
 <dl class="function">
 <dt id="telecom.command.inline_query_handler">
-<code class="sig-prename descclassname">telecom.command.</code><code class="sig-name descname">inline_query_handler</code><span class="sig-paren">(</span><em class="sig-param">bot: telegram.bot.Bot</em>, <em class="sig-param">update: telegram.update.Update</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/telecom/command.html#inline_query_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#telecom.command.inline_query_handler" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">telecom.command.</code><code class="sig-name descname">inline_query_handler</code><span class="sig-paren">(</span><em class="sig-param">update: telegram.update.Update</em>, <em class="sig-param">context: telegram.ext.callbackcontext.CallbackContext</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/telecom/command.html#inline_query_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#telecom.command.inline_query_handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Global inline query handler.</p>
 <p>Register it to a telegram dispatcher as such:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">updater</span> <span class="o">=</span> <span class="n">Updater</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
