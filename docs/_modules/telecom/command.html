@@ -82,6 +82,7 @@
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Sequence</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
     <span class="n">Union</span>
 <span class="p">)</span>
 
@@ -107,7 +108,7 @@
 <span class="p">)</span>
 
 
-<span class="n">COMMANDS</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[str, Command]</span>
+<span class="n">COMMANDS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="s1">&#39;Command&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="sd">&quot;&quot;&quot;Dictionary that maps a command name to the corresponding class.</span>
 
 <span class="sd">See :py:meth:`telecom.command.register_command`.</span>
@@ -120,7 +121,6 @@
 <span class="sd">    It is caught by :py:meth:`telecom.command.Command.__call__`, so in</span>
 <span class="sd">    practice, it just interrupts the execution flow.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
-
 
 <div class="viewcode-block" id="Command"><a class="viewcode-back" href="../../telecom.html#telecom.command.Command">[docs]</a><span class="k">class</span> <span class="nc">Command</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;This class represent an abstract command that can be issued over</span>
@@ -160,14 +160,14 @@
         <span class="n">ON_RAISED_EXCEPTION</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
 
 
-    <span class="n">PENDING_COMMANDS</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[str, Command]</span>
+    <span class="n">PENDING_COMMANDS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;Command&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="sd">&quot;&quot;&quot;Global dict of pending commands.&quot;&quot;&quot;</span>
 
     <span class="n">PENDING_COMMANDS_COUNTER</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="sd">&quot;&quot;&quot;A global counter that is incremented each a new pending command is added</span>
 <span class="sd">    to :py:attr:`telecom.command.Command.PENDING_COMMANDS`.&quot;&quot;&quot;</span>
 
-    <span class="n">GLOBAL_HOOKS</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: Dict[HookType, Sequence[Callable[[Command], None]]]</span>
+    <span class="n">GLOBAL_HOOKS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">HookType</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s1">&#39;Command&#39;</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="sd">&quot;&quot;&quot;A global dict containing all hooks.&quot;&quot;&quot;</span>
 
     <span class="n">__HELP__</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -404,7 +404,7 @@
 
 <div class="viewcode-block" id="register_command"><a class="viewcode-back" href="../../telecom.html#telecom.command.register_command">[docs]</a><span class="k">def</span> <span class="nf">register_command</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">:</span> <span class="n">Dispatcher</span><span class="p">,</span>
                      <span class="n">command_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                     <span class="n">command_class</span><span class="p">,</span>
+                     <span class="n">command_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Command</span><span class="p">],</span>
                      <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Registers a new command.</span>
 

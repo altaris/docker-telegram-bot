@@ -11,12 +11,12 @@ from docker_utils import (
 )
 
 
-COMMAND_KEYBOARD = ReplyKeyboardMarkup([
+COMMAND_KEYBOARD: ReplyKeyboardMarkup = ReplyKeyboardMarkup([
     ["/info", "/logs", "/help"],
     ["/start", "/stop", "/restart"],
     ["/pause", "/unpause"],
     ["/restart_bot"]
-])  # type: ReplyKeyboardMarkup
+])
 
 
 class Hi(DockerCommand):

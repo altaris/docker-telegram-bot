@@ -24,6 +24,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     Union
 )
 
@@ -49,7 +50,7 @@ from telecom.selector import (
 )
 
 
-COMMANDS = {}  # type: Dict[str, Command]
+COMMANDS: Dict[str, Type['Command']] = {}
 """Dictionary that maps a command name to the corresponding class.
 
 See :py:meth:`telecom.command.register_command`.
@@ -62,7 +63,6 @@ class NotEnoughArguments(Exception):
     It is caught by :py:meth:`telecom.command.Command.__call__`, so in
     practice, it just interrupts the execution flow.
     """
-
 
 class Command:
     """This class represent an abstract command that can be issued over
@@ -102,14 +102,14 @@ class Command:
         ON_RAISED_EXCEPTION = auto()
 
 
-    PENDING_COMMANDS = {}  # type: Dict[str, Command]
+    PENDING_COMMANDS: Dict[str, 'Command'] = {}
     """Global dict of pending commands."""
 
     PENDING_COMMANDS_COUNTER: int = 0
     """A global counter that is incremented each a new pending command is added
     to :py:attr:`telecom.command.Command.PENDING_COMMANDS`."""
 
-    GLOBAL_HOOKS = {}  # type: Dict[HookType, Sequence[Callable[[Command], None]]]
+    GLOBAL_HOOKS: Dict[HookType, Sequence[Callable[['Command'], None]]] = {}
     """A global dict containing all hooks."""
 
     __HELP__: Optional[str] = None
@@ -346,7 +346,7 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
 
 def register_command(dispatcher: Dispatcher,
                      command_name: str,
-                     command_class,
+                     command_class: Type[Command],
                      **kwargs) -> None:
     """Registers a new command.
 
