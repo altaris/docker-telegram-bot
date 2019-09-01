@@ -34,6 +34,7 @@ class ArgumentSelector:
     :py:meth:`telecom.selector.ArgumentSelector.option_inline_keyboard`"""
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
+        # pylint: disable=line-too-long
         """Implement this.
 
         This method returns the list of options. An option is either a button
@@ -52,18 +53,14 @@ class ArgumentSelector:
         """Creates a inline keyboard out of the options provided by this
         selector.
         """
-        button_list = []  # type: List[InlineKeyboardButton]
-        for item in self.option_list():
-            if isinstance(item, str):
-                text, code = item, item
-            elif isinstance(item, tuple):
-                text, code = item
-            button_list += [InlineKeyboardButton(
+        button_layout = []  # type: List[List[InlineKeyboardButton]]
+        for idx, item in enumerate(self.option_list()):
+            (text, code) = \
+                item if isinstance(item, tuple) else (item, item)
+            button = InlineKeyboardButton(
                 text,
                 callback_data=f'{callback_prefix}:{code}'
-            )]
-        button_layout = []  # type: List[List[InlineKeyboardButton]]
-        for idx, button in enumerate(button_list):
+            )
             if idx % ArgumentSelector.COLUMN_COUNT == 0:
                 button_layout += [[button]]
             else:
