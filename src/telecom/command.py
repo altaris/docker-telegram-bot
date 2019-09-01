@@ -20,7 +20,6 @@ from typing import (
     Any,
     Callable,
     Dict,
-    List,
     Optional,
     Sequence,
     Tuple,
@@ -29,7 +28,6 @@ from typing import (
 )
 
 from telegram import (
-    Bot,
     Message,
     ParseMode,
     Update
@@ -38,6 +36,7 @@ from telegram.constants import (
     MAX_MESSAGE_LENGTH
 )
 from telegram.ext import (
+    CallbackContext,
     CommandHandler,
     Dispatcher
 )
@@ -117,8 +116,8 @@ class Command:
     _args_dict: Dict[str, Any]
     """Argument dict."""
 
-    _bot: Bot
-    """Telegram bot that called this command."""
+    _context: CallbackContext
+    """Telegram callback context."""
 
     _first_call: bool
     """Wether this is the first time this command instance is called."""
@@ -133,9 +132,8 @@ class Command:
     command is not pending."""
 
     def __call__(self,
-                 bot: Bot,
                  update: Update,
-                 args: List[str],
+                 context: CallbackContext,
                  **kwargs) -> None:
         """The command is called through this method by the telegram dispatcher.
 
@@ -143,7 +141,7 @@ class Command:
         :py:class:`telecom.command.NotEnoughArguments` exceptions.
         """
         if self._first_call:
-            self._bot = bot
+            self._context = context
             self._first_call = False
             self._message = update.message
             self.call_hooks(Command.HookType.ON_CALLED_FOR_THE_FIRST_TIME)
@@ -151,9 +149,10 @@ class Command:
             self.call_hooks(Command.HookType.ON_CALLED_NOT_FOR_THE_FIRST_TIME)
 
         kwargs_dict = {**kwargs}
-        kwargs_dict.update({
-            str(idx): val for idx, val in enumerate(args)
-        })
+        if context.args:
+            kwargs_dict.update({
+                str(idx): val for idx, val in enumerate(context.args)
+            })
         kwargs_dict.update(self._args_dict)
         self._args_dict = kwargs_dict
 
@@ -214,8 +213,10 @@ class Command:
     def delete_reply(self):
         """Deletes the last message sent by this command.
         """
-        self._bot.delete_message(self._message.chat_id,
-                                 self._message.message_id)
+        self._context.bot.delete_message(
+            self._message.chat_id,
+            self._message.message_id
+        )
 
     def edit_reply(self, text: str, **kwargs) -> None:
         """Edits the last message sent by this command.
@@ -243,7 +244,7 @@ class Command:
         if len(text_bytes) > MAX_MESSAGE_LENGTH:
             end = b'\n\n...'
             text_bytes = text_bytes[:MAX_MESSAGE_LENGTH - len(end)] + end
-        self._message = self._bot.send_message(
+        self._message = self._context.bot.send_message(
             chat_id=self._message.chat_id,
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=self._message.message_id,
@@ -322,7 +323,7 @@ def add_command_hook(hook_type: Command.HookType,
         list(Command.GLOBAL_HOOKS.get(hook_type, []))
 
 
-def inline_query_handler(bot: Bot, update: Update) -> None:
+def inline_query_handler(update: Update, context: CallbackContext) -> None:
     """Global inline query handler.
 
     Register it to a telegram dispatcher as such::
@@ -338,7 +339,7 @@ def inline_query_handler(bot: Bot, update: Update) -> None:
     arg_value = data[2]
     if call_idx in Command.PENDING_COMMANDS:
         Command.PENDING_COMMANDS[call_idx].set_arg(arg_name, arg_value)
-        Command.PENDING_COMMANDS[call_idx](bot, update, [])
+        Command.PENDING_COMMANDS[call_idx](update, context)
     else:
         logging.error("Bad call index %s", call_idx)
 

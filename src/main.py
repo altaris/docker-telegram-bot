@@ -6,19 +6,17 @@ import argparse
 import logging
 import os
 from typing import (
-    List,
-    Union
+    List
 )
 
 import docker
 import docker.errors
 from telegram import (
-    Bot,
     ParseMode,
     Update
 )
-import telegram.error
 from telegram.ext import (
+    CallbackContext,
     CallbackQueryHandler,
     Updater
 )
@@ -40,13 +38,7 @@ import cmd_stop
 import cmd_unpause
 
 
-TelegramError = Union[telegram.error.TelegramError,
-                      telegram.error.NetworkError]
-
-
-def error_callback(bot: Bot,
-                   update: Update,
-                   error: TelegramError) -> None:
+def error_callback(update: Update, context: CallbackContext) -> None:
     # pylint: disable=line-too-long
     """Custom telegram error callback.
 
@@ -55,8 +47,8 @@ def error_callback(bot: Bot,
     .. _telegram.ext.Dispatcher.add_error_handler: https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
     """
     # pylint: disable=unused-argument
-    error_name = error.__class__.__name__
-    error_message = str(error)
+    error_name = context.error.__class__.__name__
+    error_message = str(context.error)
     try:
         logging.error(
             'User "%s" raised a telegram error %s: %s',
@@ -64,7 +56,7 @@ def error_callback(bot: Bot,
             error_name,
             error_message
         )
-        bot.send_message(
+        context.bot.send_message(
             chat_id=update.message.chat_id,
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=update.message.message_id,
@@ -96,7 +88,7 @@ def init_telegram(token: str,
 
     Registers commands, polls.
     """
-    updater = Updater(token=token)
+    updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
     dispatcher.add_error_handler(error_callback)
