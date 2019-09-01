@@ -50,13 +50,6 @@ from telecom.selector import (
 )
 
 
-COMMANDS: Dict[str, Type['Command']] = {}
-"""Dictionary that maps a command name to the corresponding class.
-
-See :py:meth:`telecom.command.register_command`.
-"""
-
-
 class NotEnoughArguments(Exception):
     """This exception is raised when a command doesn't have enough argument.
 
@@ -101,6 +94,12 @@ class Command:
         ON_NOT_ENOUGH_ARGUMENTS = auto()
         ON_RAISED_EXCEPTION = auto()
 
+
+    COMMANDS: Dict[str, Type['Command']] = {}
+    """Dictionary that maps a command name to the corresponding class.
+
+    See :py:meth:`telecom.command.register_command`.
+    """
 
     PENDING_COMMANDS: Dict[str, 'Command'] = {}
     """Global dict of pending commands."""
@@ -369,7 +368,7 @@ def register_command(dispatcher: Dispatcher,
 
     logging.debug("Registering command %s", command_name)
 
-    COMMANDS[command_name] = command_class
+    Command.COMMANDS[command_name] = command_class
     Help.HELP_DICT[command_name] = command_class.__HELP__
 
     authorized_users = kwargs.get("authorized_users", [])
