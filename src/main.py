@@ -64,8 +64,6 @@ def error_callback(update: Update, context: CallbackContext) -> None:
 Last command raised a telegram `{error_name}`: {error_message}'''
         )
     except:  # pylint: disable=bare-except
-        pass
-    else:
         logging.error(
             'Telegram error %s: %s',
             error_name,
