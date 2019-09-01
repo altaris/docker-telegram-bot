@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Defines selectors.
 
-A selector is a class that derives from ``telecom.selector.ArgumentSelector``
-and that implements ``telecom.selector.ArgumentSelector.option_list``.
-Abstractly, it represents an inline keyboard to be showed to the user when an
-argument (having this selector) is needed.
+A selector is a class that derives from
+:py:class:`telecom.selector.ArgumentSelector` and that implements
+:py:meth:`telecom.selector.ArgumentSelector.option_list`. Abstractly, it
+represents an inline keyboard to be showed to the user when an argument (having
+this selector) is needed.
 
-See ``telecom.command.Command.arg``.
+See :py:meth:`telecom.command.Command.arg`.
 """
 
 from typing import (
@@ -27,6 +28,10 @@ class ArgumentSelector:
     """
 
     COLUMN_COUNT: int = 2
+    """Column count of the telegram inline keyboard.
+
+    See implementation of
+    :py:meth:`telecom.selector.ArgumentSelector.option_inline_keyboard`"""
 
     def option_list(self) -> Sequence[Union[str, Tuple[str, str]]]:
         """Implement this.
@@ -36,7 +41,9 @@ class ArgumentSelector:
         is returned through the inline query mechanism of telegram if
         available, otherwise, the label is.
 
-        See https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html
+        See `telegram.inlinequery`_.
+
+        .. _telegram.inlinequery: https://python-telegram-bot.readthedocs.io/en/stable/telegram.inlinequery.html
         """
         raise NotImplementedError
 

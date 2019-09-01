@@ -10,6 +10,9 @@ check:
 	mypy src/telecom/*.py
 	mypy src/*.py
 
+clean:
+	rm -rf build/
+
 .ONESHELL:
 doc:
 	. $(VENV_ACTIVATE)

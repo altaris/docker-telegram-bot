@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 """Implementation of command related abstract classes and functions.
+
+A *command* is a message of the form ``/commandName`` issued to the bot over
+telegram. In Python, it is represented by a subclass of
+:py:class:`telecom.command.Command` that implements
+:py:meth:`telecom.command.Command.main`.
+
+See :py:class:`telecom.Command` for more documentation, and
+:py:class:`cmd_hi.Hi` for an example.
 """
 
 from enum import (
@@ -42,13 +50,17 @@ from telecom.selector import (
 
 
 COMMANDS = {}  # type: Dict[str, Command]
+"""Dictionary that maps a command name to the corresponding class.
+
+See :py:meth:`telecom.command.register_command`.
+"""
 
 
 class NotEnoughArguments(Exception):
     """This exception is raised when a command doesn't have enough argument.
 
-    It is caught by ``Command.__call__``, so in practice, it just interrupts
-    the execution flow.
+    It is caught by :py:meth:`telecom.command.Command.__call__`, so in
+    practice, it just interrupts the execution flow.
     """
 
 
@@ -56,31 +68,18 @@ class Command:
     """This class represent an abstract command that can be issued over
     telegram.
 
-    Simply derive this class and implement ``telecom.Command.main``. A help
-    message can be stored in class static member ``telecom.Command.__HELP__``.
-
-    Attributes:
-        PENDING_COMMANDS: Global dict of pending commands.
-        PENDING_COMMANDS_COUNTER: A global counter that is incremented each
-            a new pending command is added to PENDING_COMMANDS
-        GLOBAL_HOOKS: A global dict containing all hooks.
-        __HELP__: Help text of that command.
-        _args_dict: Argument dict.
-        _bot: Telegram bot that called this command.
-        _first_call: Wether this is the first time this command instance is
-            called.
-        _message: Either the user message that called this command, or the last
-            message the command sent.
-        _pending_idx: Key of this command in PENDING_COMMANDS, or ``None`` if
-            the command is not pending.
+    Simply derive this class and implement
+    :py:meth:`telecom.command.Command.main`. A help message can be stored in
+    class static member :py:meth:`telecom.command.Command.__HELP__`.
     """
 
     class HookType(IntEnum):
         """Hook types.
 
         A hook is a function called at certain points of the execution of a
-        command. They are added using ``telecom.command.add_command_hook``.
-        There can be multiple functions per hook.
+        command. They are added using
+        :py:meth:`telecom.command.add_command_hook`. There can be multiple
+        functions per hook.
 
         The currently supported hook types are:
             * ``ON_CALLED_FOR_THE_FIRST_TIME``: when the command instance is
@@ -89,11 +88,11 @@ class Command:
                called but not for the first time;
             * ``ON_CREATED``: when the command instance is created;
             * ``ON_FINISHED``: when the command instance finishes execution
-               NORMALLY;
+               **normally**;
             * ``ON_NOT_ENOUGH_ARGUMENTS``: when the execution of the command is
               interrupted because of missing arguments;
             * ``ON_RAISED_EXCEPTION``: when an exception (other than
-              ``telecom.command.NotEnoughArguments``) is raised.
+              :py:class:`telecom.command.NotEnoughArguments`) is raised.
         """
         ON_CALLED_FOR_THE_FIRST_TIME = auto()
         ON_CALLED_NOT_FOR_THE_FIRST_TIME = auto()
@@ -104,16 +103,35 @@ class Command:
 
 
     PENDING_COMMANDS = {}  # type: Dict[str, Command]
+    """Global dict of pending commands."""
+
     PENDING_COMMANDS_COUNTER: int = 0
+    """A global counter that is incremented each a new pending command is added
+    to :py:attr:`telecom.command.Command.PENDING_COMMANDS`."""
+
     GLOBAL_HOOKS = {}  # type: Dict[HookType, Sequence[Callable[[Command], None]]]
+    """A global dict containing all hooks."""
 
     __HELP__: Optional[str] = None
+    """Help text of that command."""
 
     _args_dict: Dict[str, Any]
+    """Argument dict."""
+
     _bot: Bot
+    """Telegram bot that called this command."""
+
     _first_call: bool
+    """Wether this is the first time this command instance is called."""
+
     _message: Message
+    """Either the user message that called this command, or the last message
+    the command sent."""
+
     _pending_idx: Optional[str]
+    """Key of this command in
+    :py:attr:`telecom.command.Command.PENDING_COMMANDS`, or ``None`` if the
+    command is not pending."""
 
     def __call__(self,
                  bot: Bot,
@@ -123,7 +141,7 @@ class Command:
         """The command is called through this method by the telegram dispatcher.
 
         Do not reimplement this. It calls hooks and catches
-        ``telecom.command.NotEnoughArguments`` exceptions.
+        :py:class:`telecom.command.NotEnoughArguments` exceptions.
         """
         if self._first_call:
             self._bot = bot
@@ -162,14 +180,14 @@ class Command:
             arg_name: str,
             selector: ArgumentSelector,
             text: str = "Select an option:") -> Any:
-        """This function returns the value of an argument.
+        """Returns the value of an argument.
 
         If the argument is not available, the selector displays an inline
         keyboard, and the command instance raises a
-        ``telecom.command.NotEnoughArguments`` exception instance so as to be
-        stored in ``telecom.Command.PENDING_COMMANDS`` (see
-        ``telecom.command.Command.__call__``) waiting to be called again with
-        the missing argument.
+        :py:class:`telecom.command.NotEnoughArguments` exception instance so as
+        to be stored in :py:attr:`telecom.Command.PENDING_COMMANDS` (see
+        :py:meth:`telecom.command.Command.__call__`) waiting to be called again
+        with the missing argument.
         """
         if arg_name in self._args_dict:
             return self._args_dict[arg_name]
@@ -189,7 +207,7 @@ class Command:
         """Calls all hooks of a given type.
 
         Hooks are called in the order they have been added using
-        ``telecom.command.add_command_hook``.
+        :py:meth:`telecom.command.add_command_hook`.
         """
         for hook in Command.GLOBAL_HOOKS.get(hook_type, []):
             hook(self)
@@ -214,8 +232,8 @@ class Command:
 
         This function may be executed multiple times even if the telegram user
         invokes it once. This is due to the execution flow breaking
-        ``telecom.command.NotEnoughArgument`` that is raised when missing
-        arguments are requested.
+        :py:class:`telecom.command.NotEnoughArgument` that is raised when
+        missing arguments are requested.
         """
         raise NotImplementedError
 
@@ -264,6 +282,7 @@ class Help(Command):
 Displays help message of a command."""
 
     HELP_DICT: Dict[str, Optional[str]] = {}
+    """Dictionary that maps a command name to its help text."""
 
     class CommandSelector(ArgumentSelector):
         """Selects a command name among all registered commands.
@@ -296,6 +315,9 @@ Displays help message of a command."""
 def add_command_hook(hook_type: Command.HookType,
                      hook: Callable[[Command], None]) -> None:
     """Adds a global command hook.
+
+    See :py:attr:`telecom.command.Command.GLOBAL_HOOKS` and
+    :py:meth:`telecom.command.Command.call_hooks`.
     """
     Command.GLOBAL_HOOKS[hook_type] = [hook] + \
         list(Command.GLOBAL_HOOKS.get(hook_type, []))
@@ -303,6 +325,12 @@ def add_command_hook(hook_type: Command.HookType,
 
 def inline_query_handler(bot: Bot, update: Update) -> None:
     """Global inline query handler.
+
+    Register it to a telegram dispatcher as such::
+
+        updater = Updater(token=token)
+        dispatcher = updater.dispatcher
+        dispatcher.add_handler(CallbackQueryHandler(inline_query_handler))
     """
     data = update.callback_query.data.split(":")
     logging.debug("Received callback query %s", str(data))
@@ -323,13 +351,17 @@ def register_command(dispatcher: Dispatcher,
     """Registers a new command.
 
     Args:
-        dispatcher (telegram.ext.Dispatcher): Telegram dispatcher
-        command_name (str): Command name
-        command_class (type): Class where the command is implemented
-        defaults (dict): Defaults arguments to be passed to the instances of
-                         that command
-        authorized_users: List of users authorized to call this command; if
-                          none provided, all users are authorized
+        dispatcher : telegram.ext.Dispatcher
+            Telegram dispatcher.
+        command_name : str
+            Command name.
+        command_class : type
+            Class where the command is implemented.
+        defaults : Dict[str, Any]
+            Defaults arguments to be passed to the instances of that command.
+        authorized_users : List[int]
+            List of users authorized to call this command; if none provided, all
+            users are authorized
     """
     def factory(*args, **kwargs):
         cmd = command_class()
@@ -358,7 +390,7 @@ def register_command(dispatcher: Dispatcher,
 def register_help_command(dispatcher: Dispatcher) -> None:
     """Registers builtin help command.
 
-    See ``telecom.cmd_help.Help``.
+    See :py:class:`telecom.command.Help`.
     """
     register_command(
         dispatcher,

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Main.
+"""Main module.
 """
 
 import argparse
@@ -50,7 +50,9 @@ def error_callback(bot: Bot,
     # pylint: disable=line-too-long
     """Custom telegram error callback.
 
-    See https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
+    See `telegram.ext.Dispatcher.add_error_handler`_
+
+    .. _telegram.ext.Dispatcher.add_error_handler: https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.dispatcher.html?highlight=error%20callback#telegram.ext.Dispatcher.add_error_handler
     """
     # pylint: disable=unused-argument
     error_name = error.__class__.__name__

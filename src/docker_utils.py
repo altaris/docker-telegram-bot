@@ -26,7 +26,7 @@ from telecom.selector import (
 
 
 class ContainerSelector(ArgumentSelector):
-    """Selects a container.
+    """Selects a container of a docker client.
     """
 
     def __init__(self, docker_client: DockerClient):
@@ -46,8 +46,8 @@ class ContainerSelector(ArgumentSelector):
 class DockerCommand(Command):
     """An abstract command that interacts with the docker daemon.
 
-    A ``docker.DockerClient`` MUST be given as a default argument for key
-    ``docker_client``.
+    A ``docker.DockerClient`` **must** be given as a default value for argument
+    ``docker_client``. See :py:meth:`telecom.command.register_command`.
     """
 
     def get_container(self,
